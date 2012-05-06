@@ -18,7 +18,7 @@ Syntax: python subdown.py subreddit pages
 
 """
 
-
+blacklist = ['youtube.com','hollywoodreporter.com']
 
 class Downloader:
   """
@@ -30,12 +30,19 @@ class Downloader:
     self.help = "Sorry, %s doesn't work yet :("
     self.reddit = reddit
   def Imgur(self, link):
+    if '.' in link.split('/')[-1]: #raw link but no i. prefix
+      self.Raw(link)
+      return
     obj = urllib.urlopen(link)
     html = obj.read()
     obj.close()
-    f = open('imguralbum.txt','w')
-    f.write(html)
-    f.close()  
+    x = re.findall('<link rel="image_src" href="http://i.imgur.com/(.*?)" />', html)
+    try:
+      ilink = 'http://i.imgur.com/%s' %(x[0])
+    except IndexError:
+      print link
+      return
+    self.Raw(ilink)
   def Tumblr(self, link):
     print self.help %(link)
   def Raw(self, link):
@@ -68,8 +75,9 @@ class Downloader:
 
 class Subreddit:
 
-  def __init__(self, name, pages):
+  def __init__(self, name, pages,blacklist=[]):
     self.name = name
+    self.blacklist = blacklist
     self.headers = {
       'User-agent': 'subdown2.py by /u/legoktm'
     }
@@ -83,12 +91,11 @@ class Subreddit:
       pass
     
   def parse(self, page):
-    print 'Grabbing %s of %s' %(page, self.r)
+    print 'Grabbing page %s of %s from %s' %(page, self.pages, self.r)
     if page != 1:
       url = 'http://reddit.com/%s/.json?after=%s' %(self.r, self.after)
     else:
       url = 'http://reddit.com/%s/.json' %(self.r)
-    print url
     req = urllib2.Request(url, headers=self.headers)
     obj = urllib2.urlopen(req)
     text = obj.read()
@@ -120,9 +127,8 @@ class Subreddit:
         self.dl.Raw(item2['url'])
       elif item2['domain'] == 's-ak.buzzfed.com':
         self.dl.Raw(item2['url'])
-      elif item2['domain'] == 'youtube.com':
-        print 'Skipping %s' %(item2['url'])
-      
+      elif item2['domain'] in self.blacklist:
+        print 'Skipping %s since it is in the blacklist' %(item2['url'])    
       else: #Print it so exceptions can be created for domains
         print '------------------------------------------'
         print item2
@@ -139,5 +145,5 @@ if __name__ == "__main__":
     pg = int(sys.argv[2])
   else:
     pg = 1
-  app = Subreddit(sub,pg)
+  app = Subreddit(sub,pg,blacklist)
   app.run()
