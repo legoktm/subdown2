@@ -3,7 +3,10 @@
 import sys
 import urllib
 import re
-import simplejson
+try:
+  import simplejson
+except ImportError:
+  import json as simplejson #No speedups :(
 import os
 
 """
@@ -74,16 +77,24 @@ class Subreddit:
     
   def parse(self, page):
     print 'Grabbing %s of %s' %(page, self.r)
-    url = 'http://reddit.com/%s/.json' %(self.r)
+    if page != 1:
+      url = 'http://reddit.com/%s/.json?after=%s' %(self.r, self.after)
+    else:
+      url = 'http://reddit.com/%s/.json' %(self.r)
     print url
     obj = urllib.urlopen(url)
     text = obj.read()
     obj.close()
     data = simplejson.loads(text)
-    items = data['data']['children']
+    try:
+      self.after = data['data']['after']
+      items = data['data']['children']
+    except KeyError:
+      print data
+      sys.exit()
     for item in items:
       item2 = item['data']
-      print item2
+      #print item2
       if item2['domain'] == 'imgur.com':
         self.dl.Imgur(item2['url'])
       elif item2['domain'] == 'i.imgur.com':
