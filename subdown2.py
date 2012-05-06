@@ -111,6 +111,8 @@ class Subreddit:
         self.dl.Pagebin(item2['url'])
       elif 'tumblr.com' in item2['domain']:
         self.dl.Raw(item2['url'])
+      elif item2['domain'] == 's-ak.buzzfed.com':
+        self.dl.Raw(item2['url'])
       elif item2['domain'] == 'youtube.com':
         print 'Skipping %s' %(item2['url'])
       else: #Print it so exceptions can be created for domains
