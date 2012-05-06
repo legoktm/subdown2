@@ -4,6 +4,7 @@ import sys
 import urllib
 import re
 import simplejson
+import os
 
 """
 (C) 2012, Kunal Mehta, under the MIT License
@@ -20,8 +21,9 @@ class Downloader:
   Right now all traffic is directed through "Raw" which simply downloads the raw image file.
   """
   
-  def __init__(self):
+  def __init__(self, reddit):
     self.help = "Sorry, doesn't work yet :("
+    self.reddit = reddit
   def Imgur(self, link):
     obj = urllib.urlopen(link)
     html = obj.read()
@@ -31,14 +33,14 @@ class Downloader:
     print self.help
   def Raw(self, link):
     print 'Downloading %s' %(link)
-    filename = filename.split('?')[0]
+    link = link.split('?')[0]
     filename = link.split('/')[-1]
     if filename == '':
       filename = 'lol.txt'
     obj = urllib.urlopen(link)
     img = obj.read()
     obj.close()
-    f = open(filename, 'w')
+    f = open(self.reddit +'/'+ filename, 'w')
     f.write(img)
     f.close()
   def Twitter(self, link):
@@ -64,7 +66,11 @@ class Subreddit:
     self.pages = pages
     self.r = 'r/%s' %(self.name)
     print 'Starting %s' %(self.r)
-    self.dl = Downloader()
+    self.dl = Downloader(self.name)
+    try:
+      os.mkdir(self.name.lower())
+    except OSError:
+      pass
     
   def parse(self, page):
     print 'Grabbing %s of %s' %(page, self.r)
@@ -86,6 +92,8 @@ class Subreddit:
         self.dl.Twitter(item2['url'])
       elif item2['domain'] == 'pagebin.com':
         self.dl.Pagebin(item2['url'])
+      elif item2['domain'] == 'youtube.com':
+        print 'Skipping %s' %(item2['url'])
       else: #Hope that it's a raw link?
         self.dl.Raw(item2['url'])
     
