@@ -3,13 +3,14 @@ subdown2.py
 
 A simple script that automatically downloads all images from a certain subreddit.
 
-TODO:
-*Add support for Imgur albums
+###TODO:
 
-*Add twitter support (using tweepy library)
+ - Add support for Imgur albums
 
-*Add support for multiple pages
+ - Add twitter support (using tweepy library)
 
-*Add support for images hosted on tumblr
+ - Add support for multiple pages
 
-*Better error catching
+ - Add support for images hosted on tumblr
+
+ - Better error catching
