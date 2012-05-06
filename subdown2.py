@@ -18,7 +18,7 @@ Syntax: python subdown.py subreddit pages
 
 """
 
-blacklist = ['youtube.com','hollywoodreporter.com']
+blacklist = ['youtube.com','hollywoodreporter.com','news.stylecaster.com']
 
 class Downloader:
   """
@@ -70,6 +70,17 @@ class Downloader:
     except KeyError:
       print "Can't parse pagebin.com HTML page :("
       print "Report %s a bug please!" %(link)
+  def bolt(self, link):
+    obj = urllib.urlopen(link)
+    html = obj.read()
+    obj.close()
+    x = re.findall('<img src="(.*?)"', html)
+    try:
+      imglink = x[0]
+    except IndexError:
+      print link
+      return
+    self.Raw(imglink)
 
 
 
@@ -129,11 +140,10 @@ class Subreddit:
         self.dl.Raw(item2['url'])
       elif item2['domain'] in self.blacklist:
         print 'Skipping %s since it is in the blacklist' %(item2['url'])    
-      else: #Print it so exceptions can be created for domains
-        print '------------------------------------------'
-        print item2
-        print '------------------------------------------'
-    
+      elif item2['domain'] == 'self.EmmaWatson':
+        print 'Skipping self post: "%s"' %(item2['title'])
+      else: #Download as a raw image
+        self.dl.Raw(item2['url'])    
   def run(self):
     for pg in range(1,self.pages+1):
       self.parse(pg)
