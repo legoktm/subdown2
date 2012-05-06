@@ -3,6 +3,7 @@
 import sys
 import urllib
 import re
+import time
 try:
   import simplejson
 except ImportError:
@@ -90,8 +91,13 @@ class Subreddit:
       self.after = data['data']['after']
       items = data['data']['children']
     except KeyError:
-      print data
-      sys.exit()
+      try:
+        if data['error'] == 429:
+          print 'Too many requests on the reddit API, taking a break for a minute'
+          time.sleep(60)
+      except KeyError:
+        print data    
+        sys.exit(1)
     for item in items:
       item2 = item['data']
       #print item2
@@ -103,10 +109,14 @@ class Subreddit:
         self.dl.Twitter(item2['url'])
       elif item2['domain'] == 'pagebin.com':
         self.dl.Pagebin(item2['url'])
+      elif 'tumblr.com' in item2['domain']:
+        self.dl.Raw(item2['url'])
       elif item2['domain'] == 'youtube.com':
         print 'Skipping %s' %(item2['url'])
-      else: #Hope that it's a raw link?
-        self.dl.Raw(item2['url'])
+      else: #Print it so exceptions can be created for domains
+        print '------------------------------------------'
+        print item2
+        print '------------------------------------------'
     
   def run(self):
     for pg in range(1,self.pages+1):
