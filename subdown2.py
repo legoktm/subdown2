@@ -2,6 +2,7 @@
 
 import sys
 import urllib
+import urllib2
 import re
 import time
 try:
@@ -26,15 +27,17 @@ class Downloader:
   """
   
   def __init__(self, reddit):
-    self.help = "Sorry, doesn't work yet :("
+    self.help = "Sorry, %s doesn't work yet :("
     self.reddit = reddit
   def Imgur(self, link):
     obj = urllib.urlopen(link)
     html = obj.read()
     obj.close()
-      
+    f = open('imguralbum.txt','w')
+    f.write(html)
+    f.close()  
   def Tumblr(self, link):
-    print self.help
+    print self.help %(link)
   def Raw(self, link):
     print 'Downloading %s' %(link)
     link = link.split('?')[0]
@@ -48,7 +51,7 @@ class Downloader:
     f.write(img)
     f.close()
   def Twitter(self, link):
-    print self.help
+    print self.help %(link)
   def Pagebin(self, link):
     obj = urllib.urlopen(link)
     html = obj.read()
@@ -67,6 +70,9 @@ class Subreddit:
 
   def __init__(self, name, pages):
     self.name = name
+    self.headers = {
+      'User-agent': 'subdown2.py by /u/legoktm'
+    }
     self.pages = pages
     self.r = 'r/%s' %(self.name)
     print 'Starting %s' %(self.r)
@@ -83,7 +89,8 @@ class Subreddit:
     else:
       url = 'http://reddit.com/%s/.json' %(self.r)
     print url
-    obj = urllib.urlopen(url)
+    req = urllib2.Request(url, headers=self.headers)
+    obj = urllib2.urlopen(req)
     text = obj.read()
     obj.close()
     data = simplejson.loads(text)
@@ -115,6 +122,7 @@ class Subreddit:
         self.dl.Raw(item2['url'])
       elif item2['domain'] == 'youtube.com':
         print 'Skipping %s' %(item2['url'])
+      
       else: #Print it so exceptions can be created for domains
         print '------------------------------------------'
         print item2
