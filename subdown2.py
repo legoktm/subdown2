@@ -19,7 +19,7 @@ Syntax: python subdown.py subreddit[,subreddit] pages
 
 """
 
-blacklist = ['youtube.com','hollywoodreporter.com','news.stylecaster.com']
+blacklist = ['youtube.com','hollywoodreporter.com','news.stylecaster.com','vimeo.com']
 
 class Downloader:
   """
