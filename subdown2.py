@@ -5,6 +5,7 @@ import urllib
 import urllib2
 import re
 import time
+import memegrab
 try:
   import simplejson
 except ImportError:
@@ -81,6 +82,8 @@ class Downloader:
       print link
       return
     self.Raw(imglink)
+  def qkme(self, link):
+    memegrab.get_image_qm(memegrab.read_url(link), self.reddit+'/')
 
 
 
@@ -142,6 +145,8 @@ class Subreddit:
         print 'Skipping %s since it is in the blacklist' %(item2['url'])    
       elif 'self.' in item2['domain']:
         print 'Skipping self post: "%s"' %(item2['title'])
+      elif (item2['domain'] == 'quickmeme.com') or (item2['domain'] == 'qkme.me'):
+        self.dl.qkme(item2['url'])
       else: #Download as a raw image
         self.dl.Raw(item2['url'])    
   def run(self):
