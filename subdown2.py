@@ -12,6 +12,7 @@ except ImportError:
   import json as simplejson #No speedups :(
   print 'You should install simplejson for faster parsing'
 import os
+from BeautifulSoup import BeautifulSoup
 
 """
 (C) 2012, Kunal Mehta, under the MIT License
@@ -20,7 +21,7 @@ Syntax: python subdown.py subreddit[,subreddit] pages
 
 """
 
-blacklist = ['youtube.com','hollywoodreporter.com','news.stylecaster.com','vimeo.com']
+blacklist = ['youtube.com','vimeo.com','dailymotion.com']
 
 class Downloader:
   """
@@ -35,9 +36,7 @@ class Downloader:
     if '.' in link.split('/')[-1]: #raw link but no i. prefix
       self.Raw(link)
       return
-    obj = urllib.urlopen(link)
-    html = obj.read()
-    obj.close()
+    html = self.page_grab(link)
     x = re.findall('<link rel="image_src" href="http://i.imgur.com/(.*?)" />', html)
     try:
       ilink = 'http://i.imgur.com/%s' %(x[0])
@@ -53,18 +52,18 @@ class Downloader:
     filename = link.split('/')[-1]
     if filename == '':
       filename = 'lol.txt'
-    obj = urllib.urlopen(link)
-    img = obj.read()
-    obj.close()
+    try:
+      img = self.page_grab(link)    
+    except IOError,e:
+      print 'IOError: %s' %(str(e))
+      return
     f = open(self.reddit +'/'+ filename, 'w')
     f.write(img)
     f.close()
   def Twitter(self, link):
     print self.help %(link)
   def Pagebin(self, link):
-    obj = urllib.urlopen(link)
-    html = obj.read()
-    obj.close()
+    html = self.page_grab(link)
     x=re.findall('<img alt="(.*?)" src="(.*?)" style="width: (.*?)px; height: (.*?)px; " />', html)
     try:
       iimgur = x[0][1]
@@ -73,9 +72,7 @@ class Downloader:
       print "Can't parse pagebin.com HTML page :("
       print "Report %s a bug please!" %(link)
   def bolt(self, link):
-    obj = urllib.urlopen(link)
-    html = obj.read()
-    obj.close()
+    html = self.page_grab(link)
     x = re.findall('<img src="(.*?)"', html)
     try:
       imglink = x[0]
@@ -85,6 +82,32 @@ class Downloader:
     self.Raw(imglink)
   def qkme(self, link):
     memegrab.get_image_qm(memegrab.read_url(link), self.reddit+'/')
+  def All(self, link):
+    #verify it is an html page, not a raw image.
+    open = urllib2.urlopen(link)
+    headers = open.info().headers
+    open.close()
+    for header in headers:
+      if header.lower().startswith('content-type'):
+        #right header
+        is_html = 'text/html' in header
+    if not is_html: #means it is most likely an image
+      self.Raw(link)
+      return
+    html = self.page_grab(link)
+    soup = BeautifulSoup(html)
+    imgs = soup.findAll('img')
+    for img in imgs:
+      try:
+        url = img['src']
+        self.Raw(url)
+      except:
+        pass
+  def page_grab(self, link):
+    obj = urllib.urlopen(link)
+    html = obj.read()
+    obj.close()
+    return html
 
 
 
@@ -115,7 +138,11 @@ class Client:
     obj = urllib2.urlopen(req)
     text = obj.read()
     obj.close()
-    data = simplejson.loads(text)
+    try:
+      data = simplejson.loads(text)
+    except simplejson.decoder.JSONDecodeError:
+      print text
+      sys.exit(1)
     try:
       self.after = data['data']['after']
       items = data['data']['children']
@@ -148,8 +175,8 @@ class Client:
         print 'Skipping self post: "%s"' %(item2['title'])
       elif (item2['domain'] == 'quickmeme.com') or (item2['domain'] == 'qkme.me'):
         self.dl.qkme(item2['url'])
-      else: #Download as a raw image
-        self.dl.Raw(item2['url'])    
+      else: #Download all the images on the page
+        self.dl.All(item2['url'])    
   def run(self):
     for pg in range(1,self.pages+1):
       self.parse(pg)
