@@ -2,6 +2,7 @@
 #Python2.7.2
 #Josh Roppo
 #joshroppo@gmail.com
+#Modified by Kunal Mehta to fit subdown2.py
 
 import os, re, sys
 import urllib, urllib2, urlparse
@@ -15,7 +16,9 @@ def read_url(url):
   """
   try:
     h = urllib2.urlopen(url)
-    return h.read()
+    text = h.read()
+    h.close()
+    return text
   except:
     print 'Url error:', URLError
 
@@ -42,8 +45,8 @@ def get_image_qm(url, todir):
   
     title = re.findall(r'alt="([\w|\-|\s{1|2}]+)', good_stuff[0]).pop()
   
-    set_dir(todir)
-    urllib.urlretrieve(image, title+'.jpg')
+    #set_dir(todir)
+    urllib.urlretrieve(image, todir+title+'.jpg')
     print title+'.jpg', 'Saved to:',todir
   except:
     print 'Error occured finding image', OSError
