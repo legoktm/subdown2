@@ -1,0 +1,18 @@
+MemeGrab
+
+Coded by Josh Roppo
+https://github.com/Ropes
+joshroppo@gmail.com
+
+The site QuickMeme uses an annoying transparency block to make it difficult to download the raw image.  This python script will take the link to a quickmeme image page and download the raw image to the specified directory.  If no directory has been specified they will download to the current folder.
+
+Usage via command line--
+Run using Python 2.7.2, is not compatible with Python3 due to library changes.
+Simply download image(For now):
+./memegrab.py <url to image page, tiny links work as well!>
+
+Set download directory(Creates setup.txt to store directory info for later use):
+./memegrab.py -todir <Full directory path, recommend use 'pwd'>
+
+Download a quickmeme image(Simple setup for inclusion of other sites):
+./memegrab.py -qm <image page url>
