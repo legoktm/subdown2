@@ -15,7 +15,7 @@ import os
 """
 (C) 2012, Kunal Mehta, under the MIT License
 
-Syntax: python subdown.py subreddit pages
+Syntax: python subdown.py subreddit[,subreddit] pages
 
 """
 
@@ -87,7 +87,7 @@ class Downloader:
 
 
 
-class Subreddit:
+class Client:
 
   def __init__(self, name, pages,blacklist=[]):
     self.name = name
@@ -155,10 +155,11 @@ class Subreddit:
     
 
 if __name__ == "__main__":
-  sub = sys.argv[1]
+  subreddits = sys.argv[1]
   if len(sys.argv) == 3:
     pg = int(sys.argv[2])
   else:
     pg = 1
-  app = Subreddit(sub,pg,blacklist)
-  app.run()
+  for subreddit in subreddits.split(','):
+    app = Client(subreddit,pg,blacklist)
+    app.run()
