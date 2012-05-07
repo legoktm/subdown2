@@ -10,6 +10,7 @@ try:
   import simplejson
 except ImportError:
   import json as simplejson #No speedups :(
+  print 'You should install simplejson for faster parsing'
 import os
 
 """
