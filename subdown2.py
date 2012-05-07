@@ -140,7 +140,7 @@ class Subreddit:
         self.dl.Raw(item2['url'])
       elif item2['domain'] in self.blacklist:
         print 'Skipping %s since it is in the blacklist' %(item2['url'])    
-      elif item2['domain'] == 'self.EmmaWatson':
+      elif 'self.' in item2['domain']:
         print 'Skipping self post: "%s"' %(item2['title'])
       else: #Download as a raw image
         self.dl.Raw(item2['url'])    
