@@ -170,8 +170,6 @@ class Client:
         self.dl.Pagebin(item2['url'])
       elif 'media.tumblr.com' in item2['domain']:
         self.dl.Raw(item2['url'])
-      elif item2['domain'] == 's-ak.buzzfed.com':
-        self.dl.Raw(item2['url'])
       elif item2['domain'] in self.blacklist:
         print 'Skipping %s since it is in the blacklist' %(item2['url'])    
       elif 'self.' in item2['domain']:
