@@ -1,8 +1,8 @@
 """
-subdown.py
+subdown2
 ----------
 
-subdown.py is a tool for downloading images from reddit.
+subdown2 is a script that automatically downloads all images from a certain subreddit.
 """
 
 from setuptools import setup, find_packages
@@ -13,7 +13,7 @@ setup(
     author='Kunal Mehta',
     author_email='legoktm@gmail.com',
     packages=find_packages(),
-    url='http://github.com/legoktm/subdown2/',
+    url='https://github.com/legoktm/subdown2/',
     license='LICENSE.txt',
     description='A script that automatically downloads all images from a certain subreddit.',
     long_description=open('README.md').read(),
