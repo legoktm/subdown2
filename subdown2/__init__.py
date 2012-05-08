@@ -21,7 +21,6 @@ Syntax: python subdown.py subreddit[,subreddit] pages
 
 """
 
-blacklist = ['youtube.com','vimeo.com','dailymotion.com']
 
 class Downloader:
   """
@@ -116,9 +115,8 @@ class Downloader:
 
 class Client:
 
-  def __init__(self, name, pages,blacklist=[]):
+  def __init__(self, name, pages):
     self.name = name
-    self.blacklist = blacklist
     self.headers = {
       'User-agent': 'subdown2 by /u/legoktm -- https://github.com/legoktm/subdown2'
     }
@@ -170,8 +168,6 @@ class Client:
         self.dl.Pagebin(item2['url'])
       elif 'media.tumblr.com' in item2['domain']:
         self.dl.Raw(item2['url'])
-      elif item2['domain'] in self.blacklist:
-        print 'Skipping %s since it is in the blacklist' %(item2['url'])    
       elif 'self.' in item2['domain']:
         print 'Skipping self post: "%s"' %(item2['title'])
       elif (item2['domain'] == 'quickmeme.com') or (item2['domain'] == 'qkme.me'):
@@ -190,7 +186,7 @@ def main():
   else:
     pg = 1
   for subreddit in subreddits.split(','):
-    app = Client(subreddit,pg,blacklist)
+    app = Client(subreddit,pg)
     app.run()
 
 if __name__ == "__main__":
