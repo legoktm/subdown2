@@ -21,7 +21,7 @@ setup(
     package_data={
         '': ['*.txt', '*.md']
     },
-    classifiers={
+    classifiers=[
       'License :: OSI Approved :: MIT License',
       'Operating System :: MacOS :: MacOS X',
       'Operating System :: Microsoft :: Windows',
