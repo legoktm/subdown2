@@ -1,7 +1,7 @@
 subdown2.py
 ============================
 
-A simple script that automatically downloads all images from a certain subreddit.
+A script that automatically downloads all images from a certain subreddit.
 
 ###TODO:
 
