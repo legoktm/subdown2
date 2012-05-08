@@ -180,9 +180,9 @@ class Client:
   def run(self):
     for pg in range(1,self.pages+1):
       self.parse(pg)
-    
 
-if __name__ == "__main__":
+
+def main():
   subreddits = sys.argv[1]
   if len(sys.argv) == 3:
     pg = int(sys.argv[2])
@@ -191,3 +191,6 @@ if __name__ == "__main__":
   for subreddit in subreddits.split(','):
     app = Client(subreddit,pg,blacklist)
     app.run()
+
+if __name__ == "__main__":
+  main()
