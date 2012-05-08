@@ -4,7 +4,11 @@ subdown2
 A script that automatically downloads all images from a certain subreddit.
 
 ###Installation
-For a full install run
+For a stable install run
+```
+pip install subdown2
+```
+If you wish to run the latest copy out of git
 ```
 python setup.py install
 ```
