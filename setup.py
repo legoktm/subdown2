@@ -29,6 +29,7 @@ setup(
       'Intended Audience :: End Users/Desktop',
       'Environment :: Console',
       'Programming Language :: Python',
+    ],
     entry_points = {
         'console_scripts': [
             'subdown2 = subdown2:main'
