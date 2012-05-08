@@ -14,7 +14,7 @@ setup(
     author_email='legoktm@gmail.com',
     packages=find_packages(),
     url='https://github.com/legoktm/subdown2/',
-    license='LICENSE.txt',
+    license='MIT License',
     description='A script that automatically downloads all images from a certain subreddit.',
     long_description=open('README.md').read(),
     install_requires=open('requirements.txt').read().split("\n"),
