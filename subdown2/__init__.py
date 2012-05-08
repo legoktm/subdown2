@@ -152,6 +152,7 @@ class Client:
         if data['error'] == 429:
           print 'Too many requests on the reddit API, taking a break for a minute'
           time.sleep(60)
+          self.parse(page)
       except KeyError:
         print data    
         sys.exit(1)
