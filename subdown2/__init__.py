@@ -153,6 +153,7 @@ class Client:
           print 'Too many requests on the reddit API, taking a break for a minute'
           time.sleep(60)
           self.parse(page)
+          return
       except KeyError:
         print data    
         sys.exit(1)
