@@ -94,6 +94,9 @@ class Downloader:
     if not is_html: #means it is most likely an image
       self.Raw(link)
       return
+    print 'Skipping %s since it is an HTML page.' %(link)
+    return #Don't download html pages
+    ### THIS FUNCTION IS NOT READY YET
     html = self.page_grab(link)
     soup = BeautifulSoup(html)
     imgs = soup.findAll('img')
@@ -165,7 +168,7 @@ class Client:
         self.dl.Twitter(item2['url'])
       elif item2['domain'] == 'pagebin.com':
         self.dl.Pagebin(item2['url'])
-      elif 'tumblr.com' in item2['domain']:
+      elif 'media.tumblr.com' in item2['domain']:
         self.dl.Raw(item2['url'])
       elif item2['domain'] == 's-ak.buzzfed.com':
         self.dl.Raw(item2['url'])
