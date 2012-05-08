@@ -120,7 +120,7 @@ class Client:
     self.name = name
     self.blacklist = blacklist
     self.headers = {
-      'User-agent': 'subdown2.py by /u/legoktm'
+      'User-agent': 'subdown2 by /u/legoktm -- https://github.com/legoktm/subdown2'
     }
     self.pages = pages
     self.r = 'r/%s' %(self.name)
