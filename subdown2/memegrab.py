@@ -47,7 +47,7 @@ def get_image_qm(url, todir):
   
     #set_dir(todir)
     urllib.urlretrieve(image, todir+title+'.jpg')
-    print title+'.jpg', 'Saved to:',todir
+    #print title+'.jpg', 'Saved to:',todir
   except:
     print 'Error occured finding image', OSError
 
