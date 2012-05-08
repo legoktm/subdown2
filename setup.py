@@ -21,6 +21,14 @@ setup(
     package_data={
         '': ['*.txt', '*.md']
     },
+    classifiers={
+      'License :: OSI Approved :: MIT License',
+      'Operating System :: MacOS :: MacOS X',
+      'Operating System :: Microsoft :: Windows',
+      'Operating System :: POSIX',
+      'Intended Audience :: End Users/Desktop',
+      'Environment :: Console',
+      'Programming Language :: Python',
     entry_points = {
         'console_scripts': [
             'subdown2 = subdown2:main'
