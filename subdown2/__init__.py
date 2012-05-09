@@ -213,7 +213,10 @@ class Client:
       elif item2['domain'] == 'bo.lt':
         self.dl.bolt(item2['url'])
       else: #Download all the images on the page
-        self.dl.All(item2['url'])    
+        try:
+          self.dl.All(item2['url'])
+        except:
+          print 'Error—on %s'
   def run(self):
     for pg in range(1,self.pages+1):
       self.parse(pg)
