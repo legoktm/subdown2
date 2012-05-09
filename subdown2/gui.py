@@ -43,4 +43,5 @@ def main():
   App.master.title("subdown2")
   App.mainloop()
   
-main()
+if __name__ == "__main__":
+  main()

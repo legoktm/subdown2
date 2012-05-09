@@ -6,6 +6,7 @@ import urllib2
 import re
 import time
 import memegrab
+import gui
 import twitter
 try:
   import simplejson
@@ -223,14 +224,17 @@ class Client:
 
 
 def main():
-  subreddits = sys.argv[1]
-  if len(sys.argv) == 3:
-    pg = int(sys.argv[2])
-  else:
-    pg = 1
-  for subreddit in subreddits.split(','):
-    app = Client(subreddit,pg)
-    app.run()
+  try:
+    subreddits = sys.argv[1]
+    if len(sys.argv) == 3:
+      pg = int(sys.argv[2])
+    else:
+      pg = 1
+    for subreddit in subreddits.split(','):
+      app = Client(subreddit,pg)
+      app.run()
+  except IndexError: #no arguments provided
+    gui.main()
 
 if __name__ == "__main__":
   main()
