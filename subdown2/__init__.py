@@ -6,6 +6,7 @@ import urllib2
 import re
 import time
 import memegrab
+import twitter
 try:
   import simplejson
 except ImportError:
@@ -60,7 +61,35 @@ class Downloader:
     f.write(img)
     f.close()
   def Twitter(self, link):
-    print self.help %(link)
+    api = twitter.Api()
+    try:
+      id = int(link.split('/status/')[-1])
+    except:
+      print 'Can\'t parse tweet: %s' %(link)
+    stat = api.GetStatus(id)
+    text = stat.text
+    parsed = text[text.find("http://"):text.find("http://")+21]
+    if len(parsed) == 1: #means it didnt find it
+      parsed = text[text.find("https://"):text.find("https://")+22]
+      did_it_work = len(parsed) != 1
+      if not did_it_work:
+        raise
+    #expand the url so we can send it through other sets of regular expressions
+    ret = self.page_grab('http://expandurl.appspot.com/expand', urllib.urlencode({'url':parsed}))
+    print ret
+    jsond = simplejson.loads(ret)
+    if jsond['status'].lower() == 'ok':
+      final_url = jsond['end_url']
+    else:
+      raise
+    if 'yfrog.com' in final_url:
+      self.yfrog(final_url)
+    else:
+      self.All(final_url)
+  def yfrog(self, link):
+    text = self.page_grab(link)
+    image_url = text[text.find('<div class="label">Direct:&nbsp;&nbsp;<a href="')+47:text.find('" target="_blank"><img src="/images/external.png" alt="Direct"/>')]
+    self.Raw(image_url)
   def Pagebin(self, link):
     html = self.page_grab(link)
     x=re.findall('<img alt="(.*?)" src="(.*?)" style="width: (.*?)px; height: (.*?)px; " />', html)
@@ -105,11 +134,15 @@ class Downloader:
         self.Raw(url)
       except:
         pass
-  def page_grab(self, link):
-    obj = urllib.urlopen(link)
+  def page_grab(self, link, params=False):
+    if params:
+      obj = urllib.urlopen(link, data=params)
+    else:
+      obj = urllib.urlopen(link)
     html = obj.read()
     obj.close()
     return html
+  
 
 
 
@@ -165,7 +198,10 @@ class Client:
       elif item2['domain'] == 'i.imgur.com':
         self.dl.Raw(item2['url'])
       elif item2['domain'] == 'twitter.com':
-        self.dl.Twitter(item2['url'])
+        try:
+          self.dl.Twitter(item2['url'])
+        except:
+          print 'Skipping %s since it is not supported yet' %(item2['url'])
       elif item2['domain'] == 'pagebin.com':
         self.dl.Pagebin(item2['url'])
       elif 'media.tumblr.com' in item2['domain']:
@@ -174,6 +210,8 @@ class Client:
         print 'Skipping self post: "%s"' %(item2['title'])
       elif (item2['domain'] == 'quickmeme.com') or (item2['domain'] == 'qkme.me'):
         self.dl.qkme(item2['url'])
+      elif item2['domain'] == 'bo.lt':
+        self.dl.bolt(item2['url'])
       else: #Download all the images on the page
         self.dl.All(item2['url'])    
   def run(self):
