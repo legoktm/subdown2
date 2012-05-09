@@ -23,8 +23,6 @@ subdown2 subreddit[,subreddit] #
 
  - Add support for Imgur albums
 
- - Add twitter support (using tweepy library)
-
  - Add support for images hosted on tumblr
 
  - Better error catching
