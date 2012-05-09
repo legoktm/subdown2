@@ -20,7 +20,7 @@ class Application(Frame):
       #self.title.grid(row=0, column=0, columnspan=5)
 
       self.srlabel = Label(self, text='Subreddit')
-      self.srlabel.grid(row=1,column=0)
+      self.srlabel.grid(row=0,column=0)
       
       self.subreddits = StringVar()
       self.sr_input = Entry(self, textvariable=self.subreddits, width=20)
