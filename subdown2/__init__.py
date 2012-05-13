@@ -8,11 +8,13 @@ import time
 import memegrab
 import gui
 import twitter
+import md5
+import os
 try:
   import simplejson
 except ImportError:
   import json as simplejson #No speedups :(
-  print 'You should install simplejson for faster parsing'
+  print 'WARNING: You should install simplejson for faster parsing'
 import os
 from BeautifulSoup import BeautifulSoup
 
@@ -25,6 +27,22 @@ You can add as many subreddits as you wish, just split them with a comma (no spa
 If an integer for pages is not set (or is not understood) it will be set to 1.  
 """
 
+def initialize_imgur_checking():
+  if not os.path.isfile('bad_imgur.jpg'):
+    obj = urllib.urlopen('http://i.imgur.com/sdlfkjdkfh.jpg')
+    text = obj.read()
+    obj.close()
+    f = open('bad_imgur.jpg', 'w')
+    f.write(text)
+    f.close()
+  else:
+    f = open('bad_imgur.jpg', 'r')
+    text = f.read()
+    f.close()
+  digest = md5.new(text).digest()
+  return digest
+
+
 
 class Downloader:
   """
@@ -35,6 +53,7 @@ class Downloader:
   def __init__(self, reddit):
     self.help = "Sorry, %s doesn't work yet :("
     self.reddit = reddit
+    self.bad_imgur = initialize_imgur_checking()
   def Imgur(self, link):
     if '.' in link.split('/')[-1]: #raw link but no i. prefix
       self.Raw(link)
@@ -54,11 +73,14 @@ class Downloader:
     link = link.split('?')[0]
     filename = link.split('/')[-1]
     if filename == '':
-      filename = 'lol.txt'
+      return
     try:
       img = self.page_grab(link)    
     except IOError,e:
       print 'IOError: %s' %(str(e))
+      return
+    if md5.new(img).digest() == self.bad_imgur:
+      print '%s has been removed from imgur.com' %(link)
       return
     f = open(self.reddit +'/'+ filename, 'w')
     f.write(img)
@@ -137,6 +159,7 @@ class Downloader:
         self.Raw(url)
       except:
         pass
+    
   def page_grab(self, link, params=False):
     if params:
       obj = urllib.urlopen(link, data=params)
@@ -238,6 +261,9 @@ def main():
   except IndexError: #no arguments provided
     #print helptext
     gui.main()
+
+
+
 
 if __name__ == "__main__":
   main()
