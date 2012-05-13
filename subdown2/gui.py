@@ -11,7 +11,9 @@ class Application(Frame):
       self.createWidgets()
       
     def go(self):
-      app = subdown2.Client(self.sr_input.get(),int(self.pg_input.get()))
+      subreddits = self.sr_input.get()
+      pages = int(self.pg_input.get())
+      app = subdown2.Client(subreddits,pages)
       app.run()
 
     def createWidgets(self):
@@ -35,6 +37,9 @@ class Application(Frame):
       
       self.runB = Button(self, text='Download!', command=self.go)
       self.runB.grid(row=6,column=0)
+      
+      #self.Slider = Scale(self, from_=0, to_=100, resolution=.1, orient=HORIZONTAL)
+      #self.Slider.grid(row=7, column=0)
 
 
 
