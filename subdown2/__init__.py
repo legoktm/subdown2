@@ -160,14 +160,13 @@ class Downloader:
       except:
         pass
     
-  def page_grab(self, link, params=False):
-    if params:
-      obj = urllib.urlopen(link, data=params)
-    else:
-      obj = urllib.urlopen(link)
-    html = obj.read()
+  def page_grab(self, link):
+    headers = {'User-agent': 'subdown2 (http://pypi.python.org/subdown2)'}
+    req = urllib2.Request(link, headers=headers)
+    obj = urllib2.urlopen(req)
+    text = obj.read()
     obj.close()
-    return html
+    return text
   
 
 
