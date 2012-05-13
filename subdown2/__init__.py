@@ -16,11 +16,13 @@ except ImportError:
 import os
 from BeautifulSoup import BeautifulSoup
 
-"""
+helptext = """
 (C) 2012, Kunal Mehta, under the MIT License
 
-Syntax: python subdown.py subreddit[,subreddit] pages
+Syntax: subdown2 subreddit[,subreddit] pages
 
+You can add as many subreddits as you wish, just split them with a comma (no spaces).
+If an integer for pages is not set (or is not understood) it will be set to 1.  
 """
 
 
@@ -234,6 +236,7 @@ def main():
       app = Client(subreddit,pg)
       app.run()
   except IndexError: #no arguments provided
+    #print helptext
     gui.main()
 
 if __name__ == "__main__":
