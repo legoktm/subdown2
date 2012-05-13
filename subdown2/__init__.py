@@ -219,7 +219,7 @@ class Client:
         try:
           self.dl.All(item2['url'])
         except:
-          print 'Error-on %s'
+          print 'Error-on %s' %(item2['url'])
   def run(self):
     for pg in range(1,self.pages+1):
       self.parse(pg)
