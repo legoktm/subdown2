@@ -246,6 +246,9 @@ class Client:
     for pg in range(1,self.pages+1):
       self.parse(pg)
 
+def cleanup():
+  os.remove('bad_imgur.jpg')
+
 
 def main():
   try:
@@ -260,6 +263,9 @@ def main():
   except IndexError: #no arguments provided
     #print helptext
     gui.main()
+  finally:
+    cleanup()
+    
 
 
 
