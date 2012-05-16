@@ -50,10 +50,11 @@ class Downloader:
   Right now all traffic is directed through "Raw" which simply downloads the raw image file.
   """
   
-  def __init__(self, reddit):
+  def __init__(self, reddit, force):
     self.help = "Sorry, %s doesn't work yet :("
     self.reddit = reddit
     self.bad_imgur = initialize_imgur_checking()
+    self.force = force
   def Imgur(self, link):
     if '.' in link.split('/')[-1]: #raw link but no i. prefix
       self.Raw(link)
@@ -73,6 +74,8 @@ class Downloader:
     link = link.split('?')[0]
     filename = link.split('/')[-1]
     if filename == '':
+      return
+    if os.path.isfile(self.reddit+'/'+filename) and (not force):
       return
     try:
       img = self.page_grab(link)    
@@ -173,15 +176,16 @@ class Downloader:
 
 class Client:
 
-  def __init__(self, name, pages):
+  def __init__(self, name, pages, force):
     self.name = name
     self.headers = {
       'User-agent': 'subdown2 by /u/legoktm -- https://github.com/legoktm/subdown2'
     }
     self.pages = pages
+    self.force = force
     self.r = 'r/%s' %(self.name)
     print 'Starting %s' %(self.r)
-    self.dl = Downloader(self.name)
+    self.dl = Downloader(self.name, self.force)
     try:
       os.mkdir(self.name.lower())
     except OSError:
@@ -253,12 +257,17 @@ def cleanup():
 def main():
   try:
     subreddits = sys.argv[1]
-    if len(sys.argv) == 3:
+    if len(sys.argv) >= 3:
       pg = int(sys.argv[2])
     else:
       pg = 1
+    force = False
+    for arg in sys.argv:
+      if arg == '--force':
+        force = True
+        
     for subreddit in subreddits.split(','):
-      app = Client(subreddit,pg)
+      app = Client(subreddit,pg, force)
       app.run()
   except IndexError: #no arguments provided
     print helptext
