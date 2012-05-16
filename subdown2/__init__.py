@@ -261,8 +261,8 @@ def main():
       app = Client(subreddit,pg)
       app.run()
   except IndexError: #no arguments provided
-    #print helptext
-    gui.main()
+    print helptext
+    #gui.main()
   finally:
     cleanup()
     
