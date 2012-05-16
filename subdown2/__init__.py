@@ -251,7 +251,10 @@ class Client:
       self.parse(pg)
 
 def cleanup():
-  os.remove('bad_imgur.jpg')
+  try:
+    os.remove('bad_imgur.jpg')
+  except OSError:
+    pass
 
 
 def main():
