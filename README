@@ -23,8 +23,6 @@ subdown2 subreddit[,subreddit] #
 
  - Add support for Imgur albums
 
- - Add support for images hosted on tumblr
-
  - Better error catching
 
 ### Feature Requests
