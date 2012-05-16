@@ -21,10 +21,11 @@ from BeautifulSoup import BeautifulSoup
 helptext = """
 (C) 2012, Kunal Mehta, under the MIT License
 
-Syntax: subdown2 subreddit[,subreddit] pages
+Syntax: subdown2 subreddit[,subreddit] pages [--force]
 
-You can add as many subreddits as you wish, just split them with a comma (no spaces).
-If an integer for pages is not set (or is not understood) it will be set to 1.  
+ - You can add as many subreddits as you wish, just split them with a comma (no spaces).
+ - If an integer for pages is not set (or is not understood) it will be set to 1.
+ - The force option will re-download all images and overwrite them. Default option is not to do so.
 """
 
 def initialize_imgur_checking():
