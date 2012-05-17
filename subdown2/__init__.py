@@ -71,13 +71,14 @@ class Downloader:
   def Tumblr(self, link):
     print self.help %(link)
   def Raw(self, link):
-    print 'Downloading %s' %(link)
     link = link.split('?')[0]
     filename = link.split('/')[-1]
     if filename == '':
       return
-    if os.path.isfile(self.reddit+'/'+filename) and (not force):
+    if os.path.isfile(self.reddit+'/'+filename) and (not self.force):
+      print 'Skipping %s since it already exists' %(link)
       return
+    print 'Downloading %s' %(link)
     try:
       img = self.page_grab(link)    
     except IOError,e:
