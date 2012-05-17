@@ -48,7 +48,7 @@ def initialize_imgur_checking():
 class Downloader:
   """
   Custom downloaders for different websites.
-  Right now all traffic is directed through "Raw" which simply downloads the raw image file.
+  All traffic is directed through "Raw" which simply downloads the raw image file.
   """
   
   def __init__(self, reddit, force):
@@ -56,6 +56,7 @@ class Downloader:
     self.reddit = reddit
     self.bad_imgur = initialize_imgur_checking()
     self.force = force
+    self.retry = False
   def Imgur(self, link):
     if '.' in link.split('/')[-1]: #raw link but no i. prefix
       self.Raw(link)
@@ -84,6 +85,15 @@ class Downloader:
     except IOError,e:
       print 'IOError: %s' %(str(e))
       return
+    except urllib2.HTTPError, e:
+      print 'urllib2.HTTPError: %s' %(str(e))
+      if self.retry:
+        print 'Error occurred twice on %s, now skipping' %(link)
+        self.retry = False
+        return
+      self.retry = True
+      self.Raw(link)
+      self.retry = False
     if md5.new(img).digest() == self.bad_imgur:
       print '%s has been removed from imgur.com' %(link)
       return
