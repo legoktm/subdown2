@@ -65,6 +65,7 @@ class Downloader:
       html = self.page_grab(link)
     except urllib2.HTTPError, e:
       print 'Skipping %s because of %s' %(link, str(e))
+      return
     x = re.findall('<link rel="image_src" href="http://i.imgur.com/(.*?)" />', html)
     try:
       ilink = 'http://i.imgur.com/%s' %(x[0])
