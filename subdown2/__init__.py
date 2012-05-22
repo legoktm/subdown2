@@ -180,7 +180,7 @@ class Downloader:
         pass
     
   def page_grab(self, link):
-    headers = {'User-agent': 'subdown2 (http://pypi.python.org/subdown2)'}
+    headers = {'User-agent': 'subdown2 (https://github.com/legoktm/subdown2)'}
     req = urllib2.Request(link, headers=headers)
     obj = urllib2.urlopen(req)
     text = obj.read()
