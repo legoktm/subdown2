@@ -9,6 +9,7 @@ import memegrab
 import gui
 import twitter
 import md5
+import datetime
 import os
 try:
   import simplejson
@@ -57,6 +58,7 @@ class Downloader:
     self.bad_imgur = initialize_imgur_checking()
     self.force = force
     self.retry = False
+    self.time = False
   def Imgur(self, link):
     if '.' in link.split('/')[-1]: #raw link but no i. prefix
       self.Raw(link)
@@ -80,7 +82,9 @@ class Downloader:
     filename = link.split('/')[-1]
     if filename == '':
       return
-    if os.path.isfile(self.reddit+'/'+filename) and (not self.force):
+    path = self.reddit+'/'+filename
+    if os.path.isfile(path) and (not self.force):
+      os.utime(path, (self.time, self.time))
       print 'Skipping %s since it already exists' %(link)
       return
     print 'Downloading %s' %(link)
@@ -101,9 +105,12 @@ class Downloader:
     if md5.new(img).digest() == self.bad_imgur:
       print '%s has been removed from imgur.com' %(link)
       return
-    f = open(self.reddit +'/'+ filename, 'w')
+    f = open(path, 'w')
     f.write(img)
     f.close()
+    #set new filetime
+    os.utime(path, (self.time, self.time))
+    print 'Set time to %s' %(self.time)
   def Twitter(self, link):
     api = twitter.Api()
     try:
@@ -178,7 +185,8 @@ class Downloader:
         self.Raw(url)
       except:
         pass
-    
+  def setTime(self, time):
+    self.time = time  
   def page_grab(self, link):
     headers = {'User-agent': 'subdown2 (https://github.com/legoktm/subdown2)'}
     req = urllib2.Request(link, headers=headers)
@@ -238,6 +246,7 @@ class Client:
     for item in items:
       item2 = item['data']
       #print item2
+      self.dl.setTime(item2['created'])
       if item2['domain'] == 'imgur.com':
         self.dl.Imgur(item2['url'])
       elif item2['domain'] == 'i.imgur.com':
