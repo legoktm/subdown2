@@ -9,7 +9,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='subdown2',
-    version='0.4.0',
+    version='0.5.0',
     author='Kunal Mehta',
     author_email='legoktm@gmail.com',
     packages=find_packages(),

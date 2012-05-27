@@ -63,18 +63,21 @@ class Downloader:
     if '.' in link.split('/')[-1]: #raw link but no i. prefix
       self.Raw(link)
       return
-    try:
-      html = self.page_grab(link)
-    except urllib2.HTTPError, e:
-      print 'Skipping %s because of %s' %(link, str(e))
-      return
-    x = re.findall('<link rel="image_src" href="http://i.imgur.com/(.*?)" />', html)
-    try:
-      ilink = 'http://i.imgur.com/%s' %(x[0])
-    except IndexError:
-      print link
-      return
-    self.Raw(ilink)
+    #determine whether it is an album or just one image
+    if '/a/' in link:
+      #it's an album!
+      id = link.split('/a/')[1]
+      api = self.page_grab('http://api.imgur.com/2/album/%s.json' %(id))
+      data = simplejson.loads(api)
+      for image in data['album']['images']:
+        self.Raw(image['links']['original'])
+    else:
+      #it's a raw image
+      id = link.split('/')[-1]
+      api = self.page_grab('http://api.imgur.com/2/image/%s.json' %(id))
+      data = simplejson.loads(api)
+      self.Raw(data['image']['links']['original'])
+    
   def Tumblr(self, link):
     print self.help %(link)
   def Raw(self, link):
