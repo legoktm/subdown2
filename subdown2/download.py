@@ -44,9 +44,13 @@ class Downloader:
     self.retry = False
     self.time = False
     self.logger = logger
+    self.title = False
   def Raw(self, link):
     link = link.split('?')[0]
-    filename = link.split('/')[-1]
+    old_filename = link.split('/')[-1]
+    extension = old_filename.split('.')[-1]
+    link_hash = md5.new(link).hexdigest()
+    filename = self.title + '.' + link_hash + '.' + extension #the hash is used to prevent overwriting multiple submissions with the same filename
     if filename == '':
       return
     path = self.reddit+'/'+filename
@@ -184,7 +188,9 @@ class Downloader:
       except:
         pass
   def setTime(self, time):
-    self.time = time  
+    self.time = time
+  def setTitle(self, title):
+    self.title = title.replace(' ', '_')
   def page_grab(self, link):
     headers = {'User-agent': 'subdown2 (https://github.com/legoktm/subdown2)'}
     req = urllib2.Request(link, headers=headers)

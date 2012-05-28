@@ -77,6 +77,7 @@ class Client:
       item2 = item['data']
       #print item2
       self.dl.setTime(item2['created'])
+      self.dl.setTitle(item2['title'])
       try:
         self.process_url(item2)
       except KeyboardInterrupt:
