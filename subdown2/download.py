@@ -10,7 +10,6 @@ import twitter
 from BeautifulSoup import BeautifulSoup
 
 
-
 def initialize_imgur_checking():
   if not os.path.isfile('bad_imgur.jpg'):
     obj = urllib.urlopen('http://i.imgur.com/sdlfkjdkfh.jpg')
@@ -37,13 +36,14 @@ class Downloader:
   All traffic is directed through "Raw" which simply downloads the raw image file.
   """
   
-  def __init__(self, reddit, force):
+  def __init__(self, reddit, force, logger):
     self.help = "Sorry, %s doesn't work yet :("
     self.reddit = reddit
     self.bad_imgur = initialize_imgur_checking()
     self.force = force
     self.retry = False
     self.time = False
+    self.logger = logger
   def Raw(self, link):
     link = link.split('?')[0]
     filename = link.split('/')[-1]
@@ -52,32 +52,32 @@ class Downloader:
     path = self.reddit+'/'+filename
     if os.path.isfile(path) and (not self.force):
       os.utime(path, (self.time, self.time))
-      print 'Skipping %s since it already exists' %(link)
+      self.logger.debug('Skipping %s since it already exists' %(link))
       return
-    print 'Downloading %s' %(link)
+    self.logger.debug('Downloading %s' %(link))
     try:
       img = self.page_grab(link)    
     except IOError,e:
-      print 'IOError: %s' %(str(e))
+      self.logger.error('IOError: %s' %(str(e)))
       return
     except urllib2.HTTPError, e:
-      print 'urllib2.HTTPError: %s' %(str(e))
+      self.logger.error('urllib2.HTTPError: %s' %(str(e)))
       if self.retry:
-        print 'Error occurred twice on %s, now skipping' %(link)
+        self.logger.error('Error occurred twice on %s, now skipping' %(link))
         self.retry = False
         return
       self.retry = True
       self.Raw(link)
       self.retry = False
     if md5.new(img).digest() == self.bad_imgur:
-      print '%s has been removed from imgur.com' %(link)
+      self.logger.error('%s has been removed from imgur.com' %(link))
       return
     f = open(path, 'w')
     f.write(img)
     f.close()
     #set new filetime
     os.utime(path, (self.time, self.time))
-    print 'Set time to %s' %(self.time)
+    self.logger.debug('Set time to %s' %(self.time))
   def Imgur(self, link):
     if '.' in link.split('/')[-1]: #raw link but no i. prefix
       self.Raw(link)
@@ -91,11 +91,8 @@ class Downloader:
       try:
         data = simplejson.loads(api)
       except simplejson.decoder.JSONDecodeError:
-        print '----------------ERROR----------------'
-        print api
-        print '----------------ERROR----------------'
-        print link
-        print '----------------ERROR----------------'
+        self.logger.error( api)
+        self.logger.error( link)
         sys.exit()
       for image in data['album']['images']:
         self.Raw(image['links']['original'])
@@ -107,13 +104,14 @@ class Downloader:
       self.Raw(data['image']['links']['original'])
     
   def Tumblr(self, link):
-    print self.help %(link)
+    self.logger.error( self.help %(link))
   def Twitter(self, link):
     api = twitter.Api()
     try:
       id = int(link.split('/status/')[-1])
     except:
-      print 'Can\'t parse tweet: %s' %(link)
+      self.logger.error('Can\'t parse tweet: %s' %(link))
+      return
     stat = api.GetStatus(id)
     text = stat.text
     parsed = text[text.find("http://"):text.find("http://")+21]
@@ -124,7 +122,6 @@ class Downloader:
         raise
     #expand the url so we can send it through other sets of regular expressions
     ret = self.page_grab('http://expandurl.appspot.com/expand', urllib.urlencode({'url':parsed}))
-    print ret
     jsond = simplejson.loads(ret)
     if jsond['status'].lower() == 'ok':
       final_url = jsond['end_url']
@@ -145,19 +142,23 @@ class Downloader:
       iimgur = x[0][1]
       self.Raw(iimgur)
     except KeyError:
-      print "Can't parse pagebin.com HTML page :("
-      print "Report %s a bug please!" %(link)
+      self.logger.error( "Can't parse pagebin.com HTML page :(")
+      self.logger.error( "Report %s a bug please!" %(link))
   def bolt(self, link):
     html = self.page_grab(link)
     x = re.findall('<img src="(.*?)"', html)
     try:
       imglink = x[0]
     except IndexError:
-      print link
+      self.logger.error( link)
       return
     self.Raw(imglink)
   def qkme(self, link):
-    memegrab.get_image_qm(memegrab.read_url(link), self.reddit+'/')
+    self.logger.debug('Grabbing %s.' %(link))
+    try:
+      memegrab.get_image_qm(memegrab.read_url(link), self.reddit+'/')
+    except:
+      self.logger.error('Error on %s' %(link))
   def All(self, link):
     #verify it is an html page, not a raw image.
     open = urllib2.urlopen(link)
@@ -170,7 +171,7 @@ class Downloader:
     if not is_html: #means it is most likely an image
       self.Raw(link)
       return
-    print 'Skipping %s since it is an HTML page.' %(link)
+    self.logger.debug('Skipping %s since it is an HTML page.' %(link))
     return #Don't download html pages
     ### THIS FUNCTION IS NOT READY YET
     html = self.page_grab(link)

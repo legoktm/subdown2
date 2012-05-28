@@ -7,6 +7,7 @@ import gui
 import os
 import download
 import simplejson
+import log
 
 
 helptext = """
@@ -21,7 +22,7 @@ Syntax: subdown2 subreddit[,subreddit] pages [--force]
 
 
 
-
+logger = log.Logger()
 
 
 
@@ -36,15 +37,15 @@ class Client:
     self.pages = pages
     self.force = force
     self.r = 'r/%s' %(self.name)
-    print 'Starting %s' %(self.r)
-    self.dl = download.Downloader(self.name, self.force)
+    logger.debug('Starting %s' %(self.r))
+    self.dl = download.Downloader(self.name, self.force, logger)
     try:
       os.mkdir(self.name.lower())
     except OSError:
       pass
     
   def parse(self, page):
-    print 'Grabbing page %s of %s from %s' %(page, self.pages, self.r)
+    logger.debug('Grabbing page %s of %s from %s' %(page, self.pages, self.r))
     if page != 1:
       url = 'http://reddit.com/%s/.json?after=%s' %(self.r, self.after)
     else:
@@ -56,7 +57,8 @@ class Client:
     try:
       data = simplejson.loads(text)
     except simplejson.decoder.JSONDecodeError:
-      print text
+      logger.error('simplejson.decoder.JSONDecodeError')
+      logger.error(text)
       sys.exit(1)
     try:
       self.after = data['data']['after']
@@ -64,12 +66,12 @@ class Client:
     except KeyError:
       try:
         if data['error'] == 429:
-          print 'Too many requests on the reddit API, taking a break for a minute'
+          logger.error('Too many requests on the reddit API, taking a break for a minute')
           time.sleep(60)
           self.parse(page)
           return
       except KeyError:
-        print data    
+        logger.error(data)    
         sys.exit(1)
     for item in items:
       item2 = item['data']
@@ -78,12 +80,12 @@ class Client:
       try:
         self.process_url(item2)
       except KeyboardInterrupt:
-        print 'Signal recieved'
+        logger.error('Signal recieved')
         sys.exit(1)
       except urllib2.HTTPError:
-        print 'HTTP Error on %s.' %(item2['url'])
+        logger.error('HTTP Error on %s.' %(item2['url']))
       except:
-        print 'Error-on %s.' %(item2['url'])
+        logger.error('Error-on %s.' %(item2['url']))
 
   def process_url(self, object):
     domain = object['domain']
@@ -96,7 +98,7 @@ class Client:
       try:
         self.dl.Twitter(url)
       except:
-        print 'Skipping %s since it is not supported yet' %(url)
+        logger.error('Skipping %s since it is not supported yet' %(url))
     elif domain == 'pagebin.com':
       self.dl.Pagebin(url)
     elif 'media.tumblr.com' in domain:
@@ -136,7 +138,7 @@ def main():
       app = Client(subreddit,pg, force)
       app.run()
   except IndexError: #no arguments provided
-    print helptext
+    logger.error(helptext)
     #gui.main()
   finally:
     cleanup()
@@ -146,4 +148,7 @@ def main():
 
 
 if __name__ == "__main__":
-  main()
+  try:
+    main()
+  finally:
+    logger.save()

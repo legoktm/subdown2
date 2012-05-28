@@ -35,21 +35,19 @@ def get_image_qm(url, todir):
   Extract the image name and description to be used as the image's name.
   Download the image and save to the given directory!
   """
-  try:
+
     #DOTALL mode must be specified in order to pull html
-    good_stuff = re.findall(r'<div id=\"leftside\">.*<div id=\"rightside\"', url, re.DOTALL)
+  good_stuff = re.findall(r'<div id=\"leftside\">.*<div id=\"rightside\"', url, re.DOTALL)
     #print good_stuff 
   
-    image = re.findall(r'src=\"(.*\.jpg)\"', good_stuff[0]).pop()
-    print 'Grabbing image from:', image
+  image = re.findall(r'src=\"(.*\.jpg)\"', good_stuff[0]).pop()
+    #print 'Grabbing image from:', image
   
-    title = re.findall(r'alt="([\w|\-|\s{1|2}]+)', good_stuff[0]).pop()
+  title = re.findall(r'alt="([\w|\-|\s{1|2}]+)', good_stuff[0]).pop()
   
     #set_dir(todir)
-    urllib.urlretrieve(image, todir+title+'.jpg')
+  urllib.urlretrieve(image, todir+title+'.jpg')
     #print title+'.jpg', 'Saved to:',todir
-  except:
-    print 'Error occured finding image', OSError
 
 
 def main():  
