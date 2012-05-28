@@ -39,8 +39,8 @@ class Application(Frame):
       self.runB = Button(self, text='Download!', command=self.go)
       self.runB.grid(row=6,column=0)
       
-      #self.Slider = Scale(self, from_=0, to_=100, resolution=.1, orient=HORIZONTAL)
-      #self.Slider.grid(row=7, column=0)
+      self.Slider = Scale(self, from_=0, to_=100, resolution=.1, orient=HORIZONTAL)
+      self.Slider.grid(row=7, column=0)
 
 
 
