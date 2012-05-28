@@ -13,8 +13,9 @@ class Application(Frame):
     def go(self):
       subreddits = self.sr_input.get()
       pages = int(self.pg_input.get())
-      app = subdown2.Client(subreddits,pages)
-      app.run()
+      for subreddit in subreddits.split(','):
+        app = subdown2.Client(subreddit,pages)
+        app.run()
 
     def createWidgets(self):
 	
