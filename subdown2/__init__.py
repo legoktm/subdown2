@@ -40,7 +40,7 @@ class Client:
     logger.debug('Starting %s' %(self.r))
     self.dl = download.Downloader(self.name, self.force, logger)
     try:
-      os.mkdir(self.name.lower())
+      os.mkdir(self.name)
     except OSError:
       pass
     

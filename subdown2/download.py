@@ -190,7 +190,7 @@ class Downloader:
   def setTime(self, time):
     self.time = time
   def setTitle(self, title):
-    self.title = title.replace(' ', '_')
+    self.title = title.replace(' ', '_').replace('/', '_')
   def page_grab(self, link):
     headers = {'User-agent': 'subdown2 (https://github.com/legoktm/subdown2)'}
     req = urllib2.Request(link, headers=headers)
