@@ -140,8 +140,8 @@ def main():
       app = Client(subreddit,pg, force)
       app.run()
   except IndexError: #no arguments provided
-    logger.error(helptext)
-    #gui.main()
+    #logger.error(helptext)
+    gui.main()
   finally:
     cleanup()
     
