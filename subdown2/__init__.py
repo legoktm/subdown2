@@ -113,9 +113,11 @@ class Client:
       self.dl.bolt(url)
     else: #Download all the images on the page
       self.dl.All(url)
-  def run(self):
+  def run(self, slider=False):
     for pg in range(1,self.pages+1):
       self.parse(pg)
+      if slider:
+        slider(float(pg)/self.pages*100)
 
 def cleanup():
   try:

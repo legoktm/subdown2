@@ -14,8 +14,8 @@ class Application(Frame):
       subreddits = self.sr_input.get()
       pages = int(self.pg_input.get())
       for subreddit in subreddits.split(','):
-        app = subdown2.Client(subreddit,pages)
-        app.run()
+        app = subdown2.Client(subreddit,pages,force=False)
+        app.run(slider=self.set_slider)
 
     def createWidgets(self):
       #self.title = Label(self, text='subdown2')
