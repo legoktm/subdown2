@@ -18,7 +18,6 @@ class Application(Frame):
         app.run()
 
     def createWidgets(self):
-	
       #self.title = Label(self, text='subdown2')
       #self.title.grid(row=0, column=0, columnspan=5)
 
@@ -41,6 +40,9 @@ class Application(Frame):
       
       self.Slider = Scale(self, from_=0, to_=100, resolution=.1, orient=HORIZONTAL)
       self.Slider.grid(row=7, column=0)
+    
+    def set_slider(self, value):
+      self.Slider.set(value)
 
 
 
