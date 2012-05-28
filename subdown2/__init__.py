@@ -117,7 +117,9 @@ class Client:
     for pg in range(1,self.pages+1):
       self.parse(pg)
       if slider:
-        slider(float(pg)/self.pages*100)
+        var = float(pg)/self.pages*100
+        print 'Setting Slider to %s' %(var)
+        slider(var)
 
 def cleanup():
   try:

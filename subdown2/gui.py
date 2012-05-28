@@ -1,7 +1,7 @@
 #!/usr/bin/python
 from Tkinter import *
 import __init__ as subdown2
-
+import time
 
 class Application(Frame):
 
@@ -15,7 +15,14 @@ class Application(Frame):
       pages = int(self.pg_input.get())
       for subreddit in subreddits.split(','):
         app = subdown2.Client(subreddit,pages,force=False)
-        app.run(slider=self.set_slider)
+        for pg in range(1,pages+1):
+          app.parse(pg)
+          var = float(pg)/pages*100
+          print 'Setting Slider to %s' %(var)
+          self.Slider.set(int(var))
+          self.Slider.set(5)
+          time.sleep(5)
+          self.Slider.set(45)
 
     def createWidgets(self):
       #self.title = Label(self, text='subdown2')
@@ -43,6 +50,7 @@ class Application(Frame):
     
     def set_slider(self, value):
       self.Slider.set(value)
+    
 
 
 
