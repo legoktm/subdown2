@@ -99,12 +99,14 @@ class Client:
         self.dl.Twitter(url)
       except:
         logger.error('Skipping %s since it is not supported yet' %(url))
+    elif domain == 'yfrog.com':
+      self.dl.yfrog(url)
     elif domain == 'pagebin.com':
       self.dl.Pagebin(url)
     elif 'media.tumblr.com' in domain:
       self.dl.Raw(url)
-    elif 'self.' in domain:
-      print 'Skipping self post: "%s"' %(item2['title'])
+    elif 'reddit.com' in domain:
+      print 'Skipping self/reddit post: "%s"' %(item2['title'])
     elif (domain == 'quickmeme.com') or (domain == 'qkme.me'):
       self.dl.qkme(url)
     elif domain == 'bo.lt':
