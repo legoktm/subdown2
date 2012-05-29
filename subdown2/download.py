@@ -89,6 +89,7 @@ class Downloader:
     #determine whether it is an album or just one image
     if '/a/' in link:
       #it's an album!
+      self.logger.debug('Processing Imgur album: %s' %(link))
       link = link.split('#')[0]
       id = link.split('/a/')[1]
       api = self.page_grab('http://api.imgur.com/2/album/%s.json' %(id))
