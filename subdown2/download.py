@@ -44,9 +44,13 @@ class Downloader:
     self.retry = False
     self.time = False
     self.logger = logger
+    self.title = False
   def Raw(self, link):
     link = link.split('?')[0]
-    filename = link.split('/')[-1]
+    old_filename = link.split('/')[-1]
+    extension = old_filename.split('.')[-1]
+    link_hash = md5.new(link).hexdigest()
+    filename = self.title + '.' + link_hash + '.' + extension #the hash is used to prevent overwriting multiple submissions with the same filename
     if filename == '':
       return
     path = self.reddit+'/'+filename
@@ -85,6 +89,7 @@ class Downloader:
     #determine whether it is an album or just one image
     if '/a/' in link:
       #it's an album!
+      self.logger.debug('Processing Imgur album: %s' %(link))
       link = link.split('#')[0]
       id = link.split('/a/')[1]
       api = self.page_grab('http://api.imgur.com/2/album/%s.json' %(id))
@@ -184,7 +189,9 @@ class Downloader:
       except:
         pass
   def setTime(self, time):
-    self.time = time  
+    self.time = time
+  def setTitle(self, title):
+    self.title = title.replace(' ', '_').replace('/', '_')
   def page_grab(self, link):
     headers = {'User-agent': 'subdown2 (https://github.com/legoktm/subdown2)'}
     req = urllib2.Request(link, headers=headers)
