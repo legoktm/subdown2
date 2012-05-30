@@ -1,6 +1,13 @@
 #!/usr/bin/python
 
 import os
+import sys
+
+# Creates error or debug logs based on input
+# Has a few options:
+# --debug will save a debug.log
+# --quiet will prevent any debug's from being printed -- only errors
+# --no-save will not save any logs
 
 class Logger:
   
@@ -9,6 +16,18 @@ class Logger:
     self.debug_t = '-------------\n'
     self.e_path = 'errors.log'
     self.d_path = 'debug.log'
+    #set default options
+    self.save_debug_log = False
+    self.quiet = False
+    self.nosave = False
+    #parse args to check user agreements
+    for arg in sys.argv:
+      if arg == '--debug':
+        self.save_debug_log = True
+      elif arg == '--quiet':
+        self.quiet = True
+      elif arg == '--no-save':
+        self.nosave = True
   
   def error(self, text):
     if type(text) == type(''):
@@ -17,8 +36,8 @@ class Logger:
     self.error_t += text + '\n'
     self.debug_t += text + '\n'
   
-  def debug(self, text, p=True):
-    if p:
+  def debug(self, text):
+    if not self.quiet:
       print text
     self.debug_t += text + '\n'
   
@@ -29,6 +48,8 @@ class Logger:
       self.save_debug()
   
   def save_error(self):
+    if self.nosave:
+      return
     if os.path.isfile(self.e_path):
       f = open(self.e_path, 'r')
       old = f.read()
@@ -39,6 +60,8 @@ class Logger:
     f.close()
   
   def save_debug(self):
+    if self.nosave:
+      return
     if os.path.isfile(self.d_path):
       f = open(self.d_path, 'r')
       old = f.read()
@@ -46,4 +69,5 @@ class Logger:
       self.debug_t = old + self.debug_t
     f = open(self.d_path, 'w')
     f.write(self.debug_t)
-    f.close()  
+    f.close()
+  
