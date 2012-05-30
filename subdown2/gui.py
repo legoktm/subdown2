@@ -1,7 +1,6 @@
 #!/usr/bin/python
 from Tkinter import *
 import __init__ as subdown2
-import time
 
 class Application(Frame):
 
@@ -20,9 +19,6 @@ class Application(Frame):
           var = float(pg)/pages*100
           print 'Setting Slider to %s' %(var)
           self.Slider.set(int(var))
-          self.Slider.set(5)
-          time.sleep(5)
-          self.Slider.set(45)
 
     def createWidgets(self):
       #self.title = Label(self, text='subdown2')
@@ -47,9 +43,6 @@ class Application(Frame):
       
       self.Slider = Scale(self, from_=0, to_=100, resolution=.1, orient=HORIZONTAL)
       self.Slider.grid(row=7, column=0)
-    
-    def set_slider(self, value):
-      self.Slider.set(value)
     
 
 
