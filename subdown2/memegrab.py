@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #Python2.7.2
 #Josh Roppo
 #joshroppo@gmail.com

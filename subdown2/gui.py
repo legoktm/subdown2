@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 from Tkinter import *
 import __init__ as subdown2
 
