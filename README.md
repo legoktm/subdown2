@@ -21,8 +21,6 @@ subdown2 subreddit[,subreddit] # [--force]
 
 ###TODO:
 
- - Add support for Imgur albums
-
  - Better error catching
 
 ### Feature Requests
