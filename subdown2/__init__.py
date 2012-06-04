@@ -29,13 +29,14 @@ logger = log.Logger()
 
 class Client:
 
-  def __init__(self, name, pages, force):
+  def __init__(self, name, pages, force, top):
     self.name = name
     self.headers = {
       'User-agent': 'subdown2 by /u/legoktm -- https://github.com/legoktm/subdown2'
     }
     self.pages = pages
     self.force = force
+    self.top = top
     self.r = 'r/%s' %(self.name)
     logger.debug('Starting %s' %(self.r))
     self.dl = download.Downloader(self.name, self.force, logger)
@@ -46,10 +47,12 @@ class Client:
     
   def parse(self, page):
     logger.debug('Grabbing page %s of %s from %s' %(page, self.pages, self.r))
-    if page != 1:
-      url = 'http://reddit.com/%s/.json?after=%s' %(self.r, self.after)
+    if self.top:
+      front = 'http://reddit.com/%s/top/.json' %(self.r)
     else:
-      url = 'http://reddit.com/%s/.json' %(self.r)
+      front = 'http://reddit.com/%s/.json' %(self.r)
+    if page != 1:
+      url = front + '?after=%s' %(self.r, self.after)
     req = urllib2.Request(url, headers=self.headers)
     obj = urllib2.urlopen(req)
     text = obj.read()
@@ -133,12 +136,16 @@ def main():
     else:
       pg = 1
     force = False
+    top = False
     for arg in sys.argv:
       if arg == '--force':
         force = True
+      if arg == '--top':
+        top = True
+    
         
     for subreddit in subreddits.split(','):
-      app = Client(subreddit,pg, force)
+      app = Client(subreddit,pg, force, top)
       app.run()
   except IndexError: #no arguments provided
     logger.error(helptext)
