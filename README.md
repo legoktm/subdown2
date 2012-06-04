@@ -27,6 +27,7 @@ subdown2 subreddit[,subreddit] # [--force]
 
  - Use threading
 
+ - Get top links
 ### Credits
 
  - [memegrab.py](https://github.com/Ropes/MemeGrab) by [Josh Roppo](https://github.com/Ropes)
