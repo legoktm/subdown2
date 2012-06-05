@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+import urllib
 import urllib2
 import time
 import gui
@@ -47,12 +48,17 @@ class Client:
     
   def parse(self, page):
     logger.debug('Grabbing page %s of %s from %s' %(page, self.pages, self.r))
+    params = {}
     if self.top:
-      front = 'http://reddit.com/%s/top/.json' %(self.r)
+      url = 'http://reddit.com/%s/top/.json' %(self.r)
+      params['t'] = 'all'
     else:
-      front = 'http://reddit.com/%s/.json' %(self.r)
+      url = 'http://reddit.com/%s/.json' %(self.r)
+    
     if page != 1:
-      url = front + '?after=%s' %(self.r, self.after)
+      params['after'] = self.after
+    encoded = '?' + urllib.urlencode(params)
+    url += encoded
     req = urllib2.Request(url, headers=self.headers)
     obj = urllib2.urlopen(req)
     text = obj.read()
@@ -135,17 +141,16 @@ def cleanup():
 def main():
   try:
     subreddits = sys.argv[1]
-    if len(sys.argv) >= 3:
-      pg = int(sys.argv[2])
-    else:
-      pg = 1
     force = False
     top = False
+    pg = 1
     for arg in sys.argv:
       if arg == '--force':
         force = True
       if arg == '--top':
         top = True
+      if arg.startswith('--pages:'):
+        pg = int(arg.split(':')[-1])
     
         
     for subreddit in subreddits.split(','):
