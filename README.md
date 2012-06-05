@@ -14,7 +14,7 @@ python setup.py install
 ```
 Run it by using:
 ```
-subdown2 subreddit[,subreddit] # [--force]
+subdown2 subreddit[,subreddit]  [--force,--top,--pages:#]
 ```
 
 
