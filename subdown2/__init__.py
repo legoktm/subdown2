@@ -48,11 +48,11 @@ class Client:
   def parse(self, page):
     logger.debug('Grabbing page %s of %s from %s' %(page, self.pages, self.r))
     if self.top:
-      front = 'http://reddit.com/%s/top/.json' %(self.r)
+      url = 'http://reddit.com/%s/top/.json' %(self.r)
     else:
-      front = 'http://reddit.com/%s/.json' %(self.r)
+      url = 'http://reddit.com/%s/.json' %(self.r)
     if page != 1:
-      url = front + '?after=%s' %(self.r, self.after)
+      url += '?after=%s' %(self.after)
     req = urllib2.Request(url, headers=self.headers)
     obj = urllib2.urlopen(req)
     text = obj.read()
