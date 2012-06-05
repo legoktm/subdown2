@@ -146,7 +146,7 @@ def main():
       if arg == '--top':
         top = True
       if arg.startswith('--pages:'):
-        pg = arg.split(':')[-1]
+        pg = int(arg.split(':')[-1])
     
         
     for subreddit in subreddits.split(','):
