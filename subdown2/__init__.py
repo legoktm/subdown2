@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+import urllib
 import urllib2
 import time
 import gui
@@ -47,12 +48,17 @@ class Client:
     
   def parse(self, page):
     logger.debug('Grabbing page %s of %s from %s' %(page, self.pages, self.r))
+    params = {}
     if self.top:
       url = 'http://reddit.com/%s/top/.json' %(self.r)
+      params['t'] = 'all'
     else:
       url = 'http://reddit.com/%s/.json' %(self.r)
+    
     if page != 1:
-      url += '?after=%s' %(self.after)
+      params['after'] = self.after
+    encoded = '?' + urllib.urlencode(params)
+    url += encoded
     req = urllib2.Request(url, headers=self.headers)
     obj = urllib2.urlopen(req)
     text = obj.read()
