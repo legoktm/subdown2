@@ -137,17 +137,16 @@ def cleanup():
 def main():
   try:
     subreddits = sys.argv[1]
-    if len(sys.argv) >= 3:
-      pg = int(sys.argv[2])
-    else:
-      pg = 1
     force = False
     top = False
+    pg = 1
     for arg in sys.argv:
       if arg == '--force':
         force = True
       if arg == '--top':
         top = True
+      if arg.startswith('--pages:'):
+        pg = arg.split(':')[-1]
     
         
     for subreddit in subreddits.split(','):
