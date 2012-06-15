@@ -101,6 +101,7 @@ class Downloader:
         sys.exit()
       for image in data['album']['images']:
         self.Raw(image['links']['original'])
+      self.logger.debug('Finished Imgur album: %s' %(link))
     else:
       #it's a raw image
       id = link.split('/')[-1]
