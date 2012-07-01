@@ -112,6 +112,7 @@ class DownloadThread(threading.Thread):
     self.domain = object['domain']
     self.url = object['url']
     self.dl = dl_obj
+    self.object = object
   
   def process_url(self, object):
     domain = object['domain']
@@ -144,7 +145,7 @@ class DownloadThread(threading.Thread):
       self.dl.All(url)
 
   def run(self):
-    
+    self.process_url(self.object)
 
 
 def main():
