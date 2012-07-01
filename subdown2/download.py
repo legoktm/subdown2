@@ -11,15 +11,15 @@ from BeautifulSoup import BeautifulSoup
 
 
 def initialize_imgur_checking():
-  if not os.path.isfile('bad_imgur.jpg'):
+  if not os.path.isfile('.bad_imgur.jpg'):
     obj = urllib.urlopen('http://i.imgur.com/sdlfkjdkfh.jpg')
     text = obj.read()
     obj.close()
-    f = open('bad_imgur.jpg', 'w')
+    f = open('.bad_imgur.jpg', 'w')
     f.write(text)
     f.close()
   else:
-    f = open('bad_imgur.jpg', 'r')
+    f = open('.bad_imgur.jpg', 'r')
     text = f.read()
     f.close()
   digest = md5.new(text).digest()
