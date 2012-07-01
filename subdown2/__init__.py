@@ -9,7 +9,7 @@ import os
 import download
 import simplejson
 import log
-
+import threading
 
 helptext = """
 (C) 2012, Kunal Mehta, under the MIT License
@@ -85,10 +85,10 @@ class Client:
     for item in items:
       item2 = item['data']
       #print item2
-      self.dl.setTime(item2['created'])
-      self.dl.setTitle(item2['title'])
+      new_dl = download.Downloader(self.name, self.force, logger)
+      thread = DownloadThread(item2, new_dl)
       try:
-        self.process_url(item2)
+        thread.start()
       except KeyboardInterrupt:
         logger.error('Signal recieved')
         sys.exit(1)
@@ -97,9 +97,28 @@ class Client:
       except:
         logger.error('Error-on %s.' %(item2['url']))
 
+  def run(self):
+    for pg in range(1,self.pages+1):
+      self.parse(pg)
+
+def cleanup():
+  try:
+    os.remove('bad_imgur.jpg')
+  except OSError:
+    pass
+
+class DownloadThread(threading.Thread):
+  def __init__(self, object, dl_obj):
+    self.domain = object['domain']
+    self.url = object['url']
+    self.dl = dl_obj
+  
   def process_url(self, object):
     domain = object['domain']
     url = object['url']
+    self.dl.setTime(object['created'])
+    self.dl.setTitle(object['title'])
+
     if domain == 'imgur.com':
       self.dl.Imgur(url)
     elif domain == 'i.imgur.com':
@@ -123,15 +142,9 @@ class Client:
       self.dl.bolt(url)
     else: #Download all the images on the page
       self.dl.All(url)
-  def run(self):
-    for pg in range(1,self.pages+1):
-      self.parse(pg)
 
-def cleanup():
-  try:
-    os.remove('bad_imgur.jpg')
-  except OSError:
-    pass
+  def run(self):
+    
 
 
 def main():
