@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
+import sys
 import memegrab
 import simplejson
 import urllib
 import urllib2
+import httplib
 import md5
 import os
 import twitter
@@ -46,7 +48,19 @@ class Downloader:
     self.time = False
     self.logger = logger
     self.title = False
+  
   def Raw(self, link):
+    try:
+      self.__raw(link)
+    except urllib2.URLError,e:
+      self.output('urllib2.URLError %s on %s' % (str(e), link), True)
+    except httplib.BadStatusLine,e:
+      self.output('httplib.BadStatusLine %s on %s' % (str(e), link), True)
+    except urllib2.HTTPError,e:
+      self.output('urllib2.HTTPError %s on %s' % (str(e), link), True)
+    except:
+      self.output('General error on %s' % link, True)
+  def __raw(self, link):
     link = link.split('?')[0]
     old_filename = link.split('/')[-1]
     extension = old_filename.split('.')[-1]
