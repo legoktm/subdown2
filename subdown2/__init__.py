@@ -115,6 +115,7 @@ class DownloadThread(threading.Thread):
     self.object = object
   
   def process_url(self, object):
+    threading.Thread.__init__(self)
     domain = object['domain']
     url = object['url']
     self.dl.setTime(object['created'])
