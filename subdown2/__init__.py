@@ -115,6 +115,7 @@ class DownloadThread(threading.Thread):
     url = object['url']
     dl_obj.setTime(object['created'])
     dl_obj.setTitle(object['title'])
+    dl_obj.setThreadInfo(self.getName())
 
     if domain == 'imgur.com':
       dl_obj.Imgur(url)
