@@ -188,9 +188,8 @@ class Downloader:
       self.output('Error on %s' %(link), True)
   def All(self, link):
     #verify it is an html page, not a raw image.
-    open = urllib2.urlopen(link)
-    headers = open.info().headers
-    open.close()
+    headers = self.page_grab(link, want_headers=True)
+    self.output(headers)
     for header in headers:
       if header.lower().startswith('content-type'):
         #right header
@@ -222,7 +221,16 @@ class Downloader:
       self.logger.error(newtext)
     else:
       self.logger.debug(newtext)
-  def page_grab(self, link):
+  
+
+  def page_grab(self, link, want_headers=False):
+    if want_headers:
+      self.output('Fetching headers')
+      open = urllib2.urlopen(link)
+      headers = open.info().headers
+      open.close()
+      self.output(str(headers))
+      return headers
     headers = {'User-agent': 'subdown2 (https://github.com/legoktm/subdown2)'}
     req = urllib2.Request(link, headers=headers)
     obj = urllib2.urlopen(req)
