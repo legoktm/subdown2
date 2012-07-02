@@ -107,13 +107,19 @@ class Downloader:
       self.output('Processing Imgur album: %s' %(link))
       link = link.split('#')[0]
       id = link.split('/a/')[1]
-      api = self.page_grab('http://api.imgur.com/2/album/%s.json' %(id))
+      api_link = 'http://api.imgur.com/2/album/%s.json' %(id)
+      api = self.page_grab(api_link)
       try:
         data = simplejson.loads(api)
       except simplejson.decoder.JSONDecodeError:
         self.output(api, True)
         self.output(link, True)
         sys.exit()
+      except TypeError:
+        self.output(api, True)
+        self.output(api_link, True)
+        self.output(link, True)
+        sys.exit()      
       for image in data['album']['images']:
         self.Raw(image['links']['original'])
       self.output('Finished Imgur album: %s' %(link))
