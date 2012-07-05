@@ -107,7 +107,7 @@ class DownloadThread(threading.Thread):
   
   def process_url(self, object, dl_obj):
     try:
-      __process_url(object, dl_obj)
+      self.__process_url(object, dl_obj)
     except Exception, e:
       logger.error('Error %s on %s, skipping' % (str(e), object['url']))
   
