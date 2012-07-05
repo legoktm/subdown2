@@ -188,7 +188,6 @@ class Downloader:
   def All(self, link):
     #verify it is an html page, not a raw image.
     headers = self.page_grab(link, want_headers=True)
-    self.output(headers)
     for header in headers:
       if header.lower().startswith('content-type'):
         #right header
