@@ -175,6 +175,9 @@ def main():
   except IndexError: #no arguments provided
     logger.error(helptext)
     #gui.main()
+  except KeyboardInterrupt:
+    logger.error('KeyboardInterrupt recieved.')
+    sys.exit(1)
   finally:
     cleanup()
     
