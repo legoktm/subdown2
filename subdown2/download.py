@@ -213,11 +213,9 @@ class Downloader:
 
   def page_grab(self, link, want_headers=False):
     if want_headers:
-      self.output('Fetching headers')
       open = urllib2.urlopen(link)
       headers = open.info().headers
       open.close()
-      self.output(str(headers))
       return headers
     headers = {'User-agent': 'subdown2 (https://github.com/legoktm/subdown2)'}
     req = urllib2.Request(link, headers=headers)
