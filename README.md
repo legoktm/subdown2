@@ -25,8 +25,6 @@ subdown2 subreddit[,subreddit]  [--force,--top,--pages:#]
 
 ### Feature Requests
 
- - Use threading
-
  - SFW mode
 
 ### Credits

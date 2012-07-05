@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 
+import sys
 import memegrab
 import simplejson
 import urllib
 import urllib2
+import httplib
 import md5
 import os
 import twitter
+import datetime
 
 
 def initialize_imgur_checking():
@@ -44,7 +47,19 @@ class Downloader:
     self.time = False
     self.logger = logger
     self.title = False
+  
   def Raw(self, link):
+    try:
+      self.__raw(link)
+    except urllib2.URLError,e:
+      self.output('urllib2.URLError %s on %s' % (str(e), link), True)
+    except httplib.BadStatusLine,e:
+      self.output('httplib.BadStatusLine %s on %s' % (str(e), link), True)
+    except urllib2.HTTPError,e:
+      self.output('urllib2.HTTPError %s on %s' % (str(e), link), True)
+    except:
+      self.output('General error on %s' % link, True)
+  def __raw(self, link):
     link = link.split('?')[0]
     old_filename = link.split('/')[-1]
     extension = old_filename.split('.')[-1]
@@ -55,32 +70,32 @@ class Downloader:
     path = self.reddit+'/'+filename
     if os.path.isfile(path) and (not self.force):
       os.utime(path, (self.time, self.time))
-      self.logger.debug('Skipping %s since it already exists' %(link))
+      self.output('Skipping %s since it already exists' %(link))
       return
-    self.logger.debug('Downloading %s' %(link))
+    self.output('Downloading %s' %(link))
     try:
       img = self.page_grab(link)    
     except IOError,e:
-      self.logger.error('IOError: %s' %(str(e)))
+      self.output('IOError: %s' %(str(e)), True)
       return
     except urllib2.HTTPError, e:
-      self.logger.error('urllib2.HTTPError: %s' %(str(e)))
+      self.output('urllib2.HTTPError: %s' %(str(e)), True)
       if self.retry:
-        self.logger.error('Error occurred twice on %s, now skipping' %(link))
+        self.output('Error occurred twice on %s, now skipping' %(link), True)
         self.retry = False
         return
       self.retry = True
       self.Raw(link)
       self.retry = False
     if md5.new(img).digest() == self.bad_imgur:
-      self.logger.error('%s has been removed from imgur.com' %(link))
+      self.output('%s has been removed from imgur.com' %(link), True)
       return
     f = open(path, 'w')
     f.write(img)
     f.close()
     #set new filetime
     os.utime(path, (self.time, self.time))
-    self.logger.debug('Set time to %s' %(self.time))
+    self.output('Set time to %s' %(self.time))
   def Imgur(self, link):
     if '.' in link.split('/')[-1]: #raw link but no i. prefix
       self.Raw(link)
@@ -88,19 +103,25 @@ class Downloader:
     #determine whether it is an album or just one image
     if '/a/' in link:
       #it's an album!
-      self.logger.debug('Processing Imgur album: %s' %(link))
+      self.output('Processing Imgur album: %s' %(link))
       link = link.split('#')[0]
       id = link.split('/a/')[1]
-      api = self.page_grab('http://api.imgur.com/2/album/%s.json' %(id))
+      api_link = 'http://api.imgur.com/2/album/%s.json' %(id)
+      api = self.page_grab(api_link)
       try:
         data = simplejson.loads(api)
       except simplejson.decoder.JSONDecodeError:
-        self.logger.error( api)
-        self.logger.error( link)
+        self.output(api, True)
+        self.output(link, True)
         sys.exit()
+      except TypeError:
+        self.output(api, True)
+        self.output(api_link, True)
+        self.output(link, True)
+        sys.exit()      
       for image in data['album']['images']:
         self.Raw(image['links']['original'])
-      self.logger.debug('Finished Imgur album: %s' %(link))
+      self.output('Finished Imgur album: %s' %(link))
     else:
       #it's a raw image
       id = link.split('/')[-1]
@@ -109,13 +130,13 @@ class Downloader:
       self.Raw(data['image']['links']['original'])
     
   def Tumblr(self, link):
-    self.logger.error( self.help %(link))
+    self.output(self.help %(link), True)
   def Twitter(self, link):
     api = twitter.Api()
     try:
       id = int(link.split('/status/')[-1])
     except:
-      self.logger.error('Can\'t parse tweet: %s' %(link))
+      self.output('Can\'t parse tweet: %s' %(link), True)
       return
     stat = api.GetStatus(id)
     text = stat.text
@@ -147,28 +168,26 @@ class Downloader:
       iimgur = x[0][1]
       self.Raw(iimgur)
     except KeyError:
-      self.logger.error( "Can't parse pagebin.com HTML page :(")
-      self.logger.error( "Report %s a bug please!" %(link))
+      self.output("Can't parse pagebin.com HTML page :(", True)
+      self.output("Report %s a bug please!" %(link), True)
   def bolt(self, link):
     html = self.page_grab(link)
     x = re.findall('<img src="(.*?)"', html)
     try:
       imglink = x[0]
     except IndexError:
-      self.logger.error( link)
+      self.output( link, True)
       return
     self.Raw(imglink)
   def qkme(self, link):
-    self.logger.debug('Grabbing %s.' %(link))
+    self.output('Grabbing %s.' %(link))
     try:
       memegrab.get_image_qm(memegrab.read_url(link), self.reddit+'/')
     except:
-      self.logger.error('Error on %s' %(link))
+      self.output('Error on %s' %(link), True)
   def All(self, link):
     #verify it is an html page, not a raw image.
-    open = urllib2.urlopen(link)
-    headers = open.info().headers
-    open.close()
+    headers = self.page_grab(link, want_headers=True)
     for header in headers:
       if header.lower().startswith('content-type'):
         #right header
@@ -182,7 +201,24 @@ class Downloader:
     self.time = time
   def setTitle(self, title):
     self.title = title.replace(' ', '_').replace('/', '_')
-  def page_grab(self, link):
+  def setThreadInfo(self, name):
+    self.thread_name = name
+  def output(self, text, error = False):
+    newtext = '%s-%s: %s' % (datetime.datetime.now(), self.thread_name, text)
+    if error:
+      self.logger.error(newtext)
+    else:
+      self.logger.debug(newtext)
+  
+
+  def page_grab(self, link, want_headers=False):
+    if want_headers:
+      self.output('Fetching headers')
+      open = urllib2.urlopen(link)
+      headers = open.info().headers
+      open.close()
+      self.output(str(headers))
+      return headers
     headers = {'User-agent': 'subdown2 (https://github.com/legoktm/subdown2)'}
     req = urllib2.Request(link, headers=headers)
     obj = urllib2.urlopen(req)

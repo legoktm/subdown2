@@ -9,7 +9,8 @@ import os
 import download
 import simplejson
 import log
-
+import threading
+import Queue
 
 helptext = """
 (C) 2012, Kunal Mehta, under the MIT License
@@ -24,7 +25,7 @@ Syntax: subdown2 subreddit[,subreddit] pages [--force]
 
 
 logger = log.Logger()
-
+queue = Queue.Queue()
 
 
 
@@ -85,51 +86,75 @@ class Client:
     for item in items:
       item2 = item['data']
       #print item2
-      self.dl.setTime(item2['created'])
-      self.dl.setTitle(item2['title'])
-      try:
-        self.process_url(item2)
-      except KeyboardInterrupt:
-        logger.error('Signal recieved')
-        sys.exit(1)
-      except urllib2.HTTPError:
-        logger.error('HTTP Error on %s.' %(item2['url']))
-      except:
-        logger.error('Error-on %s.' %(item2['url']))
-
-  def process_url(self, object):
-    domain = object['domain']
-    url = object['url']
-    if domain == 'imgur.com':
-      self.dl.Imgur(url)
-    elif domain == 'i.imgur.com':
-      self.dl.Raw(url)
-    elif domain == 'twitter.com':
-      try:
-        self.dl.Twitter(url)
-      except:
-        logger.error('Skipping %s since it is not supported yet' %(url))
-    elif domain == 'yfrog.com':
-      self.dl.yfrog(url)
-    elif domain == 'pagebin.com':
-      self.dl.Pagebin(url)
-    elif 'media.tumblr.com' in domain:
-      self.dl.Raw(url)
-    elif 'reddit.com' in domain:
-      print 'Skipping self/reddit post: "%s"' %(item2['title'])
-    elif (domain == 'quickmeme.com') or (domain == 'qkme.me'):
-      self.dl.qkme(url)
-    elif domain == 'bo.lt':
-      self.dl.bolt(url)
-    else: #Download all the images on the page
-      self.dl.All(url)
+      new_dl = download.Downloader(self.name, self.force, logger)
+      queue.put((item2,new_dl))
+    
+    
   def run(self):
     for pg in range(1,self.pages+1):
       self.parse(pg)
 
+def cleanup():
+  try:
+    os.remove('bad_imgur.jpg')
+  except OSError:
+    pass
+
+class DownloadThread(threading.Thread):
+  def __init__(self, queue):
+    threading.Thread.__init__(self)
+    self.queue = queue
+  
+  def process_url(self, object, dl_obj):
+    try:
+      self.__process_url(object, dl_obj)
+    except Exception, e:
+      logger.error('Error %s on %s, skipping' % (str(e), object['url']))
+  
+  def __process_url(self, object, dl_obj):
+    domain = object['domain']
+    url = object['url']
+    dl_obj.setTime(object['created'])
+    dl_obj.setTitle(object['title'])
+    dl_obj.setThreadInfo(self.getName())
+
+    if domain == 'imgur.com':
+      dl_obj.Imgur(url)
+    elif domain == 'i.imgur.com':
+      dl_obj.Raw(url)
+    elif domain == 'twitter.com':
+      try:
+        dl_obj.Twitter(url)
+      except:
+        logger.error('Skipping %s since it is not supported yet' %(url))
+    elif domain == 'yfrog.com':
+      dl_obj.yfrog(url)
+    elif domain == 'pagebin.com':
+      dl_obj.Pagebin(url)
+    elif 'media.tumblr.com' in domain:
+      dl_obj.Raw(url)
+    elif 'reddit.com' in domain:
+      print 'Skipping self/reddit post: "%s"' %(item2['title'])
+    elif (domain == 'quickmeme.com') or (domain == 'qkme.me'):
+      dl_obj.qkme(url)
+    elif domain == 'bo.lt':
+      dl_obj.bolt(url)
+    else: #Download all the images on the page
+      dl_obj.All(url)
+
+
+  def run(self):
+    while True:
+      object, dl_obj = self.queue.get()
+      self.process_url(object, dl_obj)
+      self.queue.task_done()
 
 
 def main():
+  for i in range(10):
+    t = DownloadThread(queue)
+    t.setDaemon(True)
+    t.start()
   try:
     subreddits = sys.argv[1]
     force = False
@@ -147,9 +172,13 @@ def main():
     for subreddit in subreddits.split(','):
       app = Client(subreddit,pg, force, top)
       app.run()
+    queue.join()
   except IndexError: #no arguments provided
     logger.error(helptext)
     #gui.main()
+  except KeyboardInterrupt:
+    logger.error('KeyboardInterrupt recieved.')
+    sys.exit(1)
   finally:
     logger.save()
     
