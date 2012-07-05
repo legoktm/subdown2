@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 from Tkinter import *
 import __init__ as subdown2
+import progress_bar
+import time
 
 class Application(Frame):
 
@@ -8,6 +10,8 @@ class Application(Frame):
       Frame.__init__(self, master)
       self.grid()
       self.createWidgets()
+      self.bar = progress_bar.Meter(self)
+      
       
     def go(self):
       subreddits = self.sr_input.get()
@@ -15,10 +19,11 @@ class Application(Frame):
       for subreddit in subreddits.split(','):
         app = subdown2.Client(subreddit,pages,force=False)
         for pg in range(1,pages+1):
-          app.parse(pg)
-          var = float(pg)/pages*100
+          #app.parse(pg)
+          time.sleep(1)
+          var = float(pg)/pages
           print 'Setting Slider to %s' %(var)
-          self.Slider.set(int(var))
+          self.bar.value(var)
 
     def createWidgets(self):
       #self.title = Label(self, text='subdown2')
@@ -40,10 +45,7 @@ class Application(Frame):
       
       self.runB = Button(self, text='Download!', command=self.go)
       self.runB.grid(row=6,column=0)
-      
-      self.Slider = Scale(self, from_=0, to_=100, resolution=.1, orient=HORIZONTAL)
-      self.Slider.grid(row=7, column=0)
-    
+          
 
 
 
