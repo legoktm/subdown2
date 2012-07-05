@@ -151,14 +151,11 @@ def main():
     logger.error(helptext)
     #gui.main()
   finally:
-    cleanup()
+    logger.save()
     
 
 
 
 
 if __name__ == "__main__":
-  try:
-    main()
-  finally:
-    logger.save()
+  main()
