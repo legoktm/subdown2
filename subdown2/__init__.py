@@ -83,16 +83,11 @@ class Client:
       except KeyError:
         logger.error(data)    
         sys.exit(1)
-    for i in range(5):
-      t = DownloadThread(queue)
-      t.setDaemon(True)
-      t.start()
     for item in items:
       item2 = item['data']
       #print item2
       new_dl = download.Downloader(self.name, self.force, logger)
       queue.put((item2,new_dl))
-    queue.join()
     
     
   def run(self):
@@ -149,6 +144,10 @@ class DownloadThread(threading.Thread):
 
 
 def main():
+  for i in range(10):
+    t = DownloadThread(queue)
+    t.setDaemon(True)
+    t.start()
   try:
     subreddits = sys.argv[1]
     force = False
@@ -166,6 +165,7 @@ def main():
     for subreddit in subreddits.split(','):
       app = Client(subreddit,pg, force, top)
       app.run()
+    queue.join()
   except IndexError: #no arguments provided
     logger.error(helptext)
     #gui.main()
