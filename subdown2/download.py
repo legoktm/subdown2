@@ -10,19 +10,18 @@ import md5
 import os
 import twitter
 import datetime
-from BeautifulSoup import BeautifulSoup
 
 
 def initialize_imgur_checking():
-  if not os.path.isfile('bad_imgur.jpg'):
+  if not os.path.isfile('.bad_imgur.jpg'):
     obj = urllib.urlopen('http://i.imgur.com/sdlfkjdkfh.jpg')
     text = obj.read()
     obj.close()
-    f = open('bad_imgur.jpg', 'w')
+    f = open('.bad_imgur.jpg', 'w')
     f.write(text)
     f.close()
   else:
-    f = open('bad_imgur.jpg', 'r')
+    f = open('.bad_imgur.jpg', 'r')
     text = f.read()
     f.close()
   digest = md5.new(text).digest()
@@ -193,22 +192,12 @@ class Downloader:
     for header in headers:
       if header.lower().startswith('content-type'):
         #right header
-        is_html = 'text/html' in header
-    if not is_html: #means it is most likely an image
+        is_image = header.startswith('image')
+    if is_image: #means it is most likely an image
       self.Raw(link)
       return
-    self.output('Skipping %s since it is an HTML page.' %(link))
-    return #Don't download html pages
-    ### THIS FUNCTION IS NOT READY YET
-    html = self.page_grab(link)
-    soup = BeautifulSoup(html)
-    imgs = soup.findAll('img')
-    for img in imgs:
-      try:
-        url = img['src']
-        self.Raw(url)
-      except:
-        pass
+    self.logger.debug('Skipping %s since it is an HTML page.' %(link))
+    return
   def setTime(self, time):
     self.time = time
   def setTitle(self, title):

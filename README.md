@@ -4,11 +4,11 @@ subdown2
 A script that automatically downloads all images from a certain subreddit.
 
 ###Installation
-For a stable install run
+For a stable install run (stable branch)
 ```
 pip install subdown2
 ```
-If you wish to run the latest copy out of git
+If you wish to run the latest development copy out of git (master branch)
 ```
 python setup.py install
 ```
@@ -25,7 +25,8 @@ subdown2 subreddit[,subreddit]  [--force,--top,--pages:#]
 
 ### Feature Requests
 
- - Get top links
+ - SFW mode
+
 ### Credits
 
  - [memegrab.py](https://github.com/Ropes/MemeGrab) by [Josh Roppo](https://github.com/Ropes)
