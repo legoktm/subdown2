@@ -104,8 +104,14 @@ class DownloadThread(threading.Thread):
   def __init__(self, queue):
     threading.Thread.__init__(self)
     self.queue = queue
-      
+  
   def process_url(self, object, dl_obj):
+    try:
+      __process_url(object, dl_obj)
+    except Exception, e:
+      logger.error('Error %s on %s, skipping' % (str(e), object['url']))
+  
+  def __process_url(self, object, dl_obj):
     domain = object['domain']
     url = object['url']
     dl_obj.setTime(object['created'])
