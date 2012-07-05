@@ -176,7 +176,7 @@ class Downloader:
     if is_image: #means it is most likely an image
       self.Raw(link)
       return
-    self.logger.debug('Skipping %s since it is an HTML page.' %(link))
+    self.logger.debug('Skipping %s since it is not an image.' %(link))
     return
   def setTime(self, time):
     self.time = time
