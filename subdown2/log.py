@@ -26,7 +26,7 @@ class Logger:
         self.save_debug_log = True
       elif arg == '--quiet':
         self.quiet = True
-      elif arg == '--no-save':
+      elif arg == '--no-logs':
         self.nosave = True
   
   def error(self, text):
@@ -41,15 +41,14 @@ class Logger:
       print text
     self.debug_t += text + '\n'
   
-  def save(self, e=True, d=False):
-    if e:
-      self.save_error()
-    if d:
+  def save(self):
+    if self.nosave:
+      return
+    self.save_error()      
+    if self.save_debug_log:
       self.save_debug()
   
   def save_error(self):
-    if self.nosave:
-      return
     if os.path.isfile(self.e_path):
       f = open(self.e_path, 'r')
       old = f.read()
@@ -60,8 +59,6 @@ class Logger:
     f.close()
   
   def save_debug(self):
-    if self.nosave:
-      return
     if os.path.isfile(self.d_path):
       f = open(self.d_path, 'r')
       old = f.read()
