@@ -173,8 +173,8 @@ class Downloader:
     for header in headers:
       if header.lower().startswith('content-type'):
         #right header
-        is_html = 'text/html' in header
-    if not is_html: #means it is most likely an image
+        is_image = header.startswith('image')
+    if is_image: #means it is most likely an image
       self.Raw(link)
       return
     self.logger.debug('Skipping %s since it is an HTML page.' %(link))
