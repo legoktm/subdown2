@@ -7,7 +7,6 @@ import urllib2
 import md5
 import os
 import twitter
-from BeautifulSoup import BeautifulSoup
 
 
 def initialize_imgur_checking():
@@ -178,17 +177,7 @@ class Downloader:
       self.Raw(link)
       return
     self.logger.debug('Skipping %s since it is an HTML page.' %(link))
-    return #Don't download html pages
-    ### THIS FUNCTION IS NOT READY YET
-    html = self.page_grab(link)
-    soup = BeautifulSoup(html)
-    imgs = soup.findAll('img')
-    for img in imgs:
-      try:
-        url = img['src']
-        self.Raw(url)
-      except:
-        pass
+    return
   def setTime(self, time):
     self.time = time
   def setTitle(self, title):
