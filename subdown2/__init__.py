@@ -27,6 +27,11 @@ Syntax: subdown2 subreddit[,subreddit] pages [--force]
 logger = log.Logger()
 queue = Queue.Queue()
 
+#set some global configuration values
+SFW_MODE = False
+for arg in sys.argv:
+  if arg == '--sfw':
+    SFW_MODE = True
 
 
 class Client:
@@ -123,6 +128,9 @@ class DownloadThread(threading.Thread):
     dl_obj.setTime(object['created'])
     dl_obj.setTitle(object['title'])
     dl_obj.setThreadInfo(self.getName())
+    if SFW_MODE and ('nsfw' in object['title'].lower()):
+      self.output('%s is NSFW, skipping.' % url, True)
+      return
 
     if domain == 'imgur.com':
       dl_obj.Imgur(url)
