@@ -27,6 +27,8 @@ subdown2 subreddit[,subreddit]  [--force,--top,--pages:#]
 
  - Use threading
 
+ - SFW mode
+
 ### Credits
 
  - [memegrab.py](https://github.com/Ropes/MemeGrab) by [Josh Roppo](https://github.com/Ropes)
