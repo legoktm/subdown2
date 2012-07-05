@@ -105,11 +105,17 @@ class DownloadThread(threading.Thread):
     threading.Thread.__init__(self)
     self.queue = queue
   
+  def output(self, text, error = False):
+    newtext = '%s-%s: %s' % (datetime.datetime.now(), self.getName(), text)
+    if error:
+      logger.error(text)
+    else:
+      logger.debug(text)
   def process_url(self, object, dl_obj):
     try:
       self.__process_url(object, dl_obj)
     except Exception, e:
-      logger.error('Error %s on %s, skipping' % (str(e), object['url']))
+      self.output('Error %s on %s, skipping' % (str(e), object['url']), True)
   
   def __process_url(self, object, dl_obj):
     domain = object['domain']
@@ -126,7 +132,7 @@ class DownloadThread(threading.Thread):
       try:
         dl_obj.Twitter(url)
       except:
-        logger.error('Skipping %s since it is not supported yet' %(url))
+        self.output('Skipping %s since it is not supported yet' %(url), True)
     elif domain == 'yfrog.com':
       dl_obj.yfrog(url)
     elif domain == 'pagebin.com':
@@ -134,7 +140,7 @@ class DownloadThread(threading.Thread):
     elif 'media.tumblr.com' in domain:
       dl_obj.Raw(url)
     elif 'reddit.com' in domain:
-      print 'Skipping self/reddit post: "%s"' %(item2['title'])
+      self.output('Skipping self/reddit post: "%s"' %(item2['title']))
     elif (domain == 'quickmeme.com') or (domain == 'qkme.me'):
       dl_obj.qkme(url)
     elif domain == 'bo.lt':
