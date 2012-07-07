@@ -153,10 +153,10 @@ class Downloader:
       final_url = jsond['end_url']
     else:
       raise
-    if 'yfrog.com' in final_url:
-      self.yfrog(final_url)
-    else:
-      self.All(final_url)
+    #if 'yfrog.com' in final_url:
+    #  self.yfrog(final_url)
+    #else:
+    self.All(final_url)
   def yfrog(self, link):
     text = self.page_grab(link)
     image_url = text[text.find('<div class="label">Direct:&nbsp;&nbsp;<a href="')+47:text.find('" target="_blank"><img src="/images/external.png" alt="Direct"/>')]
