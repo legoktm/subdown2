@@ -40,7 +40,7 @@ class Client:
     self.force = force
     self.top = top
     self.r = 'r/%s' %(self.name)
-    logger.debug('Starting %s' %(self.r))
+    logger.debug('Fetching %s' %(self.r))
     self.dl = download.Downloader(self.name, self.force, logger)
     try:
       os.mkdir(self.name)
@@ -48,7 +48,7 @@ class Client:
       pass
     
   def parse(self, page):
-    logger.debug('Grabbing page %s of %s from %s' %(page, self.pages, self.r))
+    logger.debug('Queuing page %s of %s from %s' %(page, self.pages, self.r))
     params = {}
     if self.top:
       url = 'http://reddit.com/%s/top/.json' %(self.r)
