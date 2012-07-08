@@ -8,6 +8,9 @@ import gui
 import os
 import download
 import simplejson
+import memegrab
+import md5
+import datetime
 import log
 import threading
 import Queue
@@ -26,7 +29,7 @@ Syntax: subdown2 subreddit[,subreddit] pages [--force]
 
 logger = log.Logger()
 queue = Queue.Queue()
-
+IMAGE_Q = Queue.Queue()
 
 
 class Client:
@@ -41,7 +44,7 @@ class Client:
     self.top = top
     self.r = 'r/%s' %(self.name)
     logger.debug('Starting %s' %(self.r))
-    self.dl = download.Downloader(self.name, self.force, logger)
+    self.dl = Downloader(self.name, self.force, logger)
     try:
       os.mkdir(self.name)
     except OSError:
@@ -86,7 +89,7 @@ class Client:
     for item in items:
       item2 = item['data']
       #print item2
-      new_dl = download.Downloader(self.name, self.force, logger)
+      new_dl = Downloader(self.name, self.force, logger)
       queue.put((item2,new_dl))
     
     
@@ -150,11 +153,237 @@ class DownloadThread(threading.Thread):
       self.queue.task_done()
 
 
+class Downloader:
+  """
+  Custom downloaders for different websites.
+  All traffic is directed through "Raw" which simply downloads the raw image file.
+  """
+  
+  def __init__(self, reddit, force, logger):
+    self.help = "Sorry, %s doesn't work yet :("
+    self.reddit = reddit
+    self.bad_imgur = initialize_imgur_checking()
+    self.force = force
+    self.retry = False
+    self.time = False
+    self.logger = logger
+    self.title = False
+  
+  def Raw(self, link):
+    try:
+      self.__raw(link)
+    except urllib2.URLError,e:
+      self.output('urllib2.URLError %s on %s' % (str(e), link), True)
+    except httplib.BadStatusLine,e:
+      self.output('httplib.BadStatusLine %s on %s' % (str(e), link), True)
+    except urllib2.HTTPError,e:
+      self.output('urllib2.HTTPError %s on %s' % (str(e), link), True)
+    except:
+      self.output('General error on %s' % link, True)
+  def __raw(self, link):
+    link = link.split('?')[0]
+    old_filename = link.split('/')[-1]
+    extension = old_filename.split('.')[-1]
+    link_hash = md5.new(link).hexdigest()
+    filename = self.title + '.' + link_hash + '.' + extension #the hash is used to prevent overwriting multiple submissions with the same filename
+    if filename == '':
+      return
+    path = self.reddit+'/'+filename
+    if os.path.isfile(path) and (not self.force):
+      os.utime(path, (self.time, self.time))
+      self.output('Skipping %s since it already exists' %(link))
+      return
+    #download the image, so add it to the queue
+    IMAGE_Q.put((link, path, self.time))
+    print 'Added to queue'
+
+  def Imgur(self, link):
+    if '.' in link.split('/')[-1]: #raw link but no i. prefix
+      self.Raw(link)
+      return
+    #determine whether it is an album or just one image
+    if '/a/' in link:
+      #it's an album!
+      self.output('Processing Imgur album: %s' %(link))
+      link = link.split('#')[0]
+      id = link.split('/a/')[1]
+      api_link = 'http://api.imgur.com/2/album/%s.json' %(id)
+      api = self.page_grab(api_link)
+      try:
+        data = simplejson.loads(api)
+      except simplejson.decoder.JSONDecodeError:
+        self.output(api, True)
+        self.output(link, True)
+        sys.exit()
+      except TypeError:
+        self.output(api, True)
+        self.output(api_link, True)
+        self.output(link, True)
+        sys.exit()      
+      for image in data['album']['images']:
+        self.Raw(image['links']['original'])
+      self.output('Finished Imgur album: %s' %(link))
+    else:
+      #it's a raw image
+      id = link.split('/')[-1]
+      api = self.page_grab('http://api.imgur.com/2/image/%s.json' %(id))
+      data = simplejson.loads(api)
+      self.Raw(data['image']['links']['original'])
+    
+  def Tumblr(self, link):
+    self.output(self.help %(link), True)
+  def Twitter(self, link):
+    api = twitter.Api()
+    try:
+      id = int(link.split('/status/')[-1])
+    except:
+      self.output('Can\'t parse tweet: %s' %(link), True)
+      return
+    stat = api.GetStatus(id)
+    text = stat.text
+    parsed = text[text.find("http://"):text.find("http://")+21]
+    if len(parsed) == 1: #means it didnt find it
+      parsed = text[text.find("https://"):text.find("https://")+22]
+      did_it_work = len(parsed) != 1
+      if not did_it_work:
+        raise
+    #expand the url so we can send it through other sets of regular expressions
+    ret = self.page_grab('http://expandurl.appspot.com/expand', urllib.urlencode({'url':parsed}))
+    jsond = simplejson.loads(ret)
+    if jsond['status'].lower() == 'ok':
+      final_url = jsond['end_url']
+    else:
+      raise
+    #if 'yfrog.com' in final_url:
+    #  self.yfrog(final_url)
+    #else:
+    self.All(final_url)
+  def yfrog(self, link):
+    text = self.page_grab(link)
+    image_url = text[text.find('<div class="label">Direct:&nbsp;&nbsp;<a href="')+47:text.find('" target="_blank"><img src="/images/external.png" alt="Direct"/>')]
+    self.Raw(image_url)
+  def Pagebin(self, link):
+    html = self.page_grab(link)
+    x=re.findall('<img alt="(.*?)" src="(.*?)" style="width: (.*?)px; height: (.*?)px; " />', html)
+    try:
+      iimgur = x[0][1]
+      self.Raw(iimgur)
+    except KeyError:
+      self.output("Can't parse pagebin.com HTML page :(", True)
+      self.output("Report %s a bug please!" %(link), True)
+  def bolt(self, link):
+    html = self.page_grab(link)
+    x = re.findall('<img src="(.*?)"', html)
+    try:
+      imglink = x[0]
+    except IndexError:
+      self.output( link, True)
+      return
+    self.Raw(imglink)
+  def qkme(self, link):
+    self.output('Grabbing %s.' %(link))
+    try:
+      memegrab.get_image_qm(memegrab.read_url(link), self.reddit+'/')
+    except:
+      self.output('Error on %s' %(link), True)
+  def All(self, link):
+    #verify it is an html page, not a raw image.
+    headers = self.page_grab(link, want_headers=True)
+    for header in headers:
+      if header.lower().startswith('content-type'):
+        #right header
+        is_image = header.startswith('image')
+    if is_image: #means it is most likely an image
+      self.Raw(link)
+      return
+    self.logger.debug('Skipping %s since it is not an image.' %(link))
+    return
+  def setTime(self, time):
+    self.time = time
+  def setTitle(self, title):
+    self.title = title.replace(' ', '_').replace('/', '_')
+  def setThreadInfo(self, name):
+    self.thread_name = name
+  def output(self, text, error = False):
+    newtext = '%s-%s: %s' % (datetime.datetime.now(), self.thread_name, text)
+    if error:
+      self.logger.error(newtext)
+    else:
+      self.logger.debug(newtext)
+  
+
+  def page_grab(self, link, want_headers=False):
+    if want_headers:
+      open = urllib2.urlopen(link)
+      headers = open.info().headers
+      open.close()
+      return headers
+    headers = {'User-agent': 'subdown2 (https://github.com/legoktm/subdown2)'}
+    req = urllib2.Request(link, headers=headers)
+    obj = urllib2.urlopen(req)
+    text = obj.read()
+    obj.close()
+    return text
+  
+
+def initialize_imgur_checking():
+  if not os.path.isfile('.bad_imgur.jpg'):
+    obj = urllib.urlopen('http://i.imgur.com/sdlfkjdkfh.jpg')
+    text = obj.read()
+    obj.close()
+    f = open('.bad_imgur.jpg', 'w')
+    f.write(text)
+    f.close()
+  else:
+    f = open('.bad_imgur.jpg', 'r')
+    text = f.read()
+    f.close()
+  digest = md5.new(text).digest()
+  return digest
+
+
+class Image_Grab_Thread(threading.Thread):
+  def __init__(self, queue):
+    threading.Thread.__init__(self)
+    self.queue = queue
+    self.bad_imgur = initialize_imgur_checking()
+  
+  def process_link(self, link, filename, time):
+    headers = {'User-agent': 'subdown2 (https://github.com/legoktm/subdown2)'}
+    req = urllib2.Request(link, headers=headers)
+    obj = urllib2.urlopen(req)
+    text = obj.read()
+    obj.close()
+    if md5.new(text).digest() == self.bad_imgur:
+      print '%s has been removed from imgur.com' %(link)
+    f = open(filename, 'w')
+    f.write(text)
+    f.close()
+    os.utime(filename, (time, time))
+    print 'Downloaded %s' %(link)
+    print 'Set time to %s' %(time)
+  
+  
+  def run(self):
+    while True:
+      link, filename, time = self.queue.get()
+      self.process_link(link, filename, time)
+      self.queue.task_done()
+  
+
+
+
+
+
+
 def main():
   for i in range(10):
     t = DownloadThread(queue)
     t.setDaemon(True)
     t.start()
+    x = Image_Grab_Thread(IMAGE_Q)
+    x.setDaemon(True)
+    x.start()
   try:
     subreddits = sys.argv[1]
     force = False
@@ -173,7 +402,7 @@ def main():
       app = Client(subreddit,pg, force, top)
       app.run()
     queue.join()
-    download.IMAGE_Q.join()
+    IMAGE_Q.join()
   except IndexError: #no arguments provided
     logger.error(helptext)
     #gui.main()
