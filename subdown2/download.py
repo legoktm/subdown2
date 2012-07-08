@@ -10,6 +10,10 @@ import md5
 import os
 import twitter
 import datetime
+import threading
+import Queue
+
+IMAGE_Q = Queue.Queue()
 
 
 def initialize_imgur_checking():
@@ -28,7 +32,41 @@ def initialize_imgur_checking():
   return digest
 
 
+class Download_Thread(threading.Thread):
+  def __init__(self, queue):
+    threading.Thread.__init__(self)
+    self.queue = queue
+    self.bad_imgur = initialize_imgur_checking()
+  
+  def process_link(self, link, filename, time):
+    headers = {'User-agent': 'subdown2 (https://github.com/legoktm/subdown2)'}
+    req = urllib2.Request(link, headers=headers)
+    obj = urllib2.urlopen(req)
+    text = obj.read()
+    obj.close()
+    if md5.new(text).digest() == self.bad_imgur:
+      print '%s has been removed from imgur.com' %(link)
+    f = open(filename, 'w')
+    f.write(text)
+    f.close()
+    os.utime(filename, (time, time))
+    print 'Set time to %s' %(time)
+  
+  
+  def run(self):
+    while True:
+      link, filename, time = self.queue.get()
+      self.process_link(link, filename, time)
+      self.queue.task_done()
+  
 
+
+
+#spawn threads
+for i in range(10):
+  t = Download_Thread(IMAGE_Q)
+  t.setDaemon(True)
+  t.start()
 
 
 
@@ -72,30 +110,9 @@ class Downloader:
       os.utime(path, (self.time, self.time))
       self.output('Skipping %s since it already exists' %(link))
       return
-    self.output('Downloading %s' %(link))
-    try:
-      img = self.page_grab(link)    
-    except IOError,e:
-      self.output('IOError: %s' %(str(e)), True)
-      return
-    except urllib2.HTTPError, e:
-      self.output('urllib2.HTTPError: %s' %(str(e)), True)
-      if self.retry:
-        self.output('Error occurred twice on %s, now skipping' %(link), True)
-        self.retry = False
-        return
-      self.retry = True
-      self.Raw(link)
-      self.retry = False
-    if md5.new(img).digest() == self.bad_imgur:
-      self.output('%s has been removed from imgur.com' %(link), True)
-      return
-    f = open(path, 'w')
-    f.write(img)
-    f.close()
-    #set new filetime
-    os.utime(path, (self.time, self.time))
-    self.output('Set time to %s' %(self.time))
+    #download the image, so add it to the queue
+    IMAGE_Q.put((link, path, self.time))
+
   def Imgur(self, link):
     if '.' in link.split('/')[-1]: #raw link but no i. prefix
       self.Raw(link)

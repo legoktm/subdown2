@@ -173,6 +173,7 @@ def main():
       app = Client(subreddit,pg, force, top)
       app.run()
     queue.join()
+    download.IMAGE_Q.join()
   except IndexError: #no arguments provided
     logger.error(helptext)
     #gui.main()
