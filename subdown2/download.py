@@ -12,6 +12,7 @@ import twitter
 import datetime
 import threading
 import Queue
+import log
 
 IMAGE_Q = Queue.Queue()
 
@@ -38,6 +39,8 @@ class Download_Thread(threading.Thread):
     self.queue = queue
     self.bad_imgur = initialize_imgur_checking()
   
+  def output(self, text,error=False):
+    log.log(text, thread_name=self.getName(), error=error)
   def process_link(self, link, filename, time):
     headers = {'User-agent': 'subdown2 (https://github.com/legoktm/subdown2)'}
     req = urllib2.Request(link, headers=headers)
@@ -45,12 +48,12 @@ class Download_Thread(threading.Thread):
     text = obj.read()
     obj.close()
     if md5.new(text).digest() == self.bad_imgur:
-      print '%s has been removed from imgur.com' %(link)
+      self.output('%s has been removed from imgur.com' %(link), error=True)
     f = open(filename, 'w')
     f.write(text)
     f.close()
     os.utime(filename, (time, time))
-    print 'Set time to %s' %(time)
+    self.output('Setting time to %s' %(time))
   
   
   def run(self):
@@ -76,14 +79,13 @@ class Downloader:
   All traffic is directed through "Raw" which simply downloads the raw image file.
   """
   
-  def __init__(self, reddit, force, logger):
+  def __init__(self, reddit, force):
     self.help = "Sorry, %s doesn't work yet :("
     self.reddit = reddit
     self.bad_imgur = initialize_imgur_checking()
     self.force = force
     self.retry = False
     self.time = False
-    self.logger = logger
     self.title = False
   
   def Raw(self, link):
@@ -111,6 +113,7 @@ class Downloader:
       self.output('Skipping %s since it already exists' %(link))
       return
     #download the image, so add it to the queue
+    self.output('Adding %s to queue.' % link)
     IMAGE_Q.put((link, path, self.time))
 
   def Imgur(self, link):
@@ -212,7 +215,7 @@ class Downloader:
     if is_image: #means it is most likely an image
       self.Raw(link)
       return
-    self.logger.debug('Skipping %s since it is not an image.' %(link))
+    self.output('Skipping %s since it is not an image.' %(link))
     return
   def setTime(self, time):
     self.time = time
@@ -221,11 +224,7 @@ class Downloader:
   def setThreadInfo(self, name):
     self.thread_name = name
   def output(self, text, error = False):
-    newtext = '%s-%s: %s' % (datetime.datetime.now(), self.thread_name, text)
-    if error:
-      self.logger.error(newtext)
-    else:
-      self.logger.debug(newtext)
+    log.log(text, thread_name = self.thread_name, error=error)
   
 
   def page_grab(self, link, want_headers=False):
