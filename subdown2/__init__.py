@@ -134,7 +134,7 @@ class DownloadThread(threading.Thread):
     elif 'media.tumblr.com' in domain:
       dl_obj.Raw(url)
     elif 'reddit.com' in domain:
-      print 'Skipping self/reddit post: "%s"' %(item2['title'])
+      log.log('Skipping self/reddit post: "%s"' %(item2['title'],thread_name=self.getName())
     elif (domain == 'quickmeme.com') or (domain == 'qkme.me'):
       dl_obj.qkme(url)
     elif domain == 'bo.lt':
@@ -192,7 +192,6 @@ class Downloader:
       return
     #download the image, so add it to the queue
     IMAGE_Q.put((link, path, self.time))
-    print 'Added to queue'
 
   def Imgur(self, link):
     if '.' in link.split('/')[-1]: #raw link but no i. prefix
@@ -352,13 +351,13 @@ class Image_Grab_Thread(threading.Thread):
     text = obj.read()
     obj.close()
     if md5.new(text).digest() == self.bad_imgur:
-      print '%s has been removed from imgur.com' %(link)
+      log.log('%s has been removed from imgur.com' %(link), thread_name=self.getName(), error=True)
     f = open(filename, 'w')
     f.write(text)
     f.close()
     os.utime(filename, (time, time))
-    print 'Downloaded %s' %(link)
-    print 'Set time to %s' %(time)
+    log.log('Downloaded %s' %(link), thread_name=self.getName())
+    log.log('Set time to %s' %(time), thread_name=self.getName())
   
   
   def run(self):
