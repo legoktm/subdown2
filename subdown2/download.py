@@ -189,9 +189,10 @@ class Downloader:
     #verify it is an html page, not a raw image.
     headers = self.page_grab(link, want_headers=True)
     for header in headers:
-      if header.lower().startswith('content-type'):
+      header = header.lower()
+      if header.startswith('content-type'):
         #right header
-        is_image = header.startswith('image')
+        is_image = header[14:].startswith('image')
     if is_image: #means it is most likely an image
       self.Raw(link)
       return
