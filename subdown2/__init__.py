@@ -125,9 +125,15 @@ class DownloadThread(threading.Thread):
     dl_obj.setTime(object['created'])
     dl_obj.setTitle(object['title'])
     dl_obj.setThreadInfo(self.getName())
-    if SFW_MODE and ('nsfw' in object['title'].lower()):
-      self.output('%s is NSFW, skipping.' % url, True)
-      return
+    nsfw = False
+    if SFW_MODE:
+        if ('nsfw' in object['title'].lower()):
+            nsfw = True
+        elif object['over_18']:
+            nsfw = True
+    if nsfw:
+        self.output('%s is NSFW, skipping.' % url, True)
+        return
 
     if domain == 'imgur.com':
       dl_obj.Imgur(url)
