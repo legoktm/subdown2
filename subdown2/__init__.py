@@ -24,7 +24,6 @@ Syntax: subdown2 subreddit[,subreddit] pages [--force]
 
 
 
-logger = log.Logger()
 queue = Queue.Queue()
 
 #set some global configuration values
@@ -32,7 +31,6 @@ SFW_MODE = False
 for arg in sys.argv:
   if arg == '--sfw':
     SFW_MODE = True
-
 
 class Client:
 
@@ -45,15 +43,14 @@ class Client:
     self.force = force
     self.top = top
     self.r = 'r/%s' %(self.name)
-    logger.debug('Starting %s' %(self.r))
-    self.dl = download.Downloader(self.name, self.force, logger)
+    log.log('Fetching %s' %(self.r))
     try:
       os.mkdir(self.name)
     except OSError:
       pass
     
   def parse(self, page):
-    logger.debug('Grabbing page %s of %s from %s' %(page, self.pages, self.r))
+    log.log('Queuing page %s of %s from %s' %(page, self.pages, self.r))
     params = {}
     if self.top:
       url = 'http://reddit.com/%s/top/.json' %(self.r)
@@ -72,8 +69,8 @@ class Client:
     try:
       data = simplejson.loads(text)
     except simplejson.decoder.JSONDecodeError:
-      logger.error('simplejson.decoder.JSONDecodeError')
-      logger.error(text)
+      log.log('simplejson.decoder.JSONDecodeError',error=True)
+      log.log(text, error=True)
       sys.exit(1)
     try:
       self.after = data['data']['after']
@@ -81,17 +78,17 @@ class Client:
     except KeyError:
       try:
         if data['error'] == 429:
-          logger.error('Too many requests on the reddit API, taking a break for a minute')
+          log.log('Too many requests on the reddit API, taking a break for a minute', error=True)
           time.sleep(60)
           self.parse(page)
           return
       except KeyError:
-        logger.error(data)    
+        log.log(data, error=True)    
         sys.exit(1)
     for item in items:
       item2 = item['data']
       #print item2
-      new_dl = download.Downloader(self.name, self.force, logger)
+      new_dl = download.Downloader(self.name, self.force)
       queue.put((item2,new_dl))
     
     
@@ -120,7 +117,7 @@ class DownloadThread(threading.Thread):
     try:
       self.__process_url(object, dl_obj)
     except Exception, e:
-      self.output('Error %s on %s, skipping' % (str(e), object['url']), True)
+      log.log('Error %s on %s, skipping' % (str(e), object['url']), thread_name=self.getName(), error=True)
   
   def __process_url(self, object, dl_obj):
     domain = object['domain']
@@ -140,7 +137,7 @@ class DownloadThread(threading.Thread):
       try:
         dl_obj.Twitter(url)
       except:
-        self.output('Skipping %s since it is not supported yet' %(url), True)
+        log.log('Skipping %s since it is not supported yet' %(url), thread_name=self.getName(), error=True)
     elif domain == 'yfrog.com':
       dl_obj.yfrog(url)
     elif domain == 'pagebin.com':
@@ -187,14 +184,13 @@ def main():
       app = Client(subreddit,pg, force, top)
       app.run()
     queue.join()
+    download.IMAGE_Q.join()
   except IndexError: #no arguments provided
-    logger.error(helptext)
+    log.log(helptext,error=True)
     #gui.main()
   except KeyboardInterrupt:
-    logger.error('KeyboardInterrupt recieved.')
+    log.log('KeyboardInterrupt recieved.',error=True)
     sys.exit(1)
-  finally:
-    logger.save()
     
 
 
