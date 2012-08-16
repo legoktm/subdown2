@@ -10,6 +10,11 @@ import md5
 import os
 import twitter
 import datetime
+import threading
+import Queue
+import log
+
+IMAGE_Q = Queue.Queue()
 
 
 def initialize_imgur_checking():
@@ -28,7 +33,43 @@ def initialize_imgur_checking():
   return digest
 
 
+class Download_Thread(threading.Thread):
+  def __init__(self, queue):
+    threading.Thread.__init__(self)
+    self.queue = queue
+    self.bad_imgur = initialize_imgur_checking()
+  
+  def output(self, text,error=False):
+    log.log(text, thread_name=self.getName(), error=error)
+  def process_link(self, link, filename, time):
+    headers = {'User-agent': 'subdown2 (https://github.com/legoktm/subdown2)'}
+    req = urllib2.Request(link, headers=headers)
+    obj = urllib2.urlopen(req)
+    text = obj.read()
+    obj.close()
+    if md5.new(text).digest() == self.bad_imgur:
+      self.output('%s has been removed from imgur.com' %(link), error=True)
+    f = open(filename, 'w')
+    f.write(text)
+    f.close()
+    os.utime(filename, (time, time))
+    self.output('Setting time to %s' %(time))
+  
+  
+  def run(self):
+    while True:
+      link, filename, time = self.queue.get()
+      self.process_link(link, filename, time)
+      self.queue.task_done()
+  
 
+
+
+#spawn threads
+for i in range(10):
+  t = Download_Thread(IMAGE_Q)
+  t.setDaemon(True)
+  t.start()
 
 
 
@@ -38,14 +79,13 @@ class Downloader:
   All traffic is directed through "Raw" which simply downloads the raw image file.
   """
   
-  def __init__(self, reddit, force, logger):
+  def __init__(self, reddit, force):
     self.help = "Sorry, %s doesn't work yet :("
     self.reddit = reddit
     self.bad_imgur = initialize_imgur_checking()
     self.force = force
     self.retry = False
     self.time = False
-    self.logger = logger
     self.title = False
   
   def Raw(self, link):
@@ -72,30 +112,10 @@ class Downloader:
       os.utime(path, (self.time, self.time))
       self.output('Skipping %s since it already exists' %(link))
       return
-    self.output('Downloading %s' %(link))
-    try:
-      img = self.page_grab(link)    
-    except IOError,e:
-      self.output('IOError: %s' %(str(e)), True)
-      return
-    except urllib2.HTTPError, e:
-      self.output('urllib2.HTTPError: %s' %(str(e)), True)
-      if self.retry:
-        self.output('Error occurred twice on %s, now skipping' %(link), True)
-        self.retry = False
-        return
-      self.retry = True
-      self.Raw(link)
-      self.retry = False
-    if md5.new(img).digest() == self.bad_imgur:
-      self.output('%s has been removed from imgur.com' %(link), True)
-      return
-    f = open(path, 'w')
-    f.write(img)
-    f.close()
-    #set new filetime
-    os.utime(path, (self.time, self.time))
-    self.output('Set time to %s' %(self.time))
+    #download the image, so add it to the queue
+    self.output('Adding %s to queue.' % link)
+    IMAGE_Q.put((link, path, self.time))
+
   def Imgur(self, link):
     if '.' in link.split('/')[-1]: #raw link but no i. prefix
       self.Raw(link)
@@ -197,7 +217,7 @@ class Downloader:
     if is_image: #means it is most likely an image
       self.Raw(link)
       return
-    self.logger.debug('Skipping %s since it is not an image.' %(link))
+    self.output('Skipping %s since it is not an image.' %(link))
     return
   def setTime(self, time):
     self.time = time
@@ -206,11 +226,7 @@ class Downloader:
   def setThreadInfo(self, name):
     self.thread_name = name
   def output(self, text, error = False):
-    newtext = '%s-%s: %s' % (datetime.datetime.now(), self.thread_name, text)
-    if error:
-      self.logger.error(newtext)
-    else:
-      self.logger.debug(newtext)
+    log.log(text, thread_name = self.thread_name, error=error)
   
 
   def page_grab(self, link, want_headers=False):
