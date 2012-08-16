@@ -192,7 +192,8 @@ class Downloader:
       header = header.lower()
       if header.startswith('content-type'):
         #right header
-        is_image = header[14:].startswith('image')
+        is_image = 'image' in header
+        break
     if is_image: #means it is most likely an image
       self.Raw(link)
       return
