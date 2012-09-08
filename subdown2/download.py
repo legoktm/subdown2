@@ -44,11 +44,16 @@ class Download_Thread(threading.Thread):
   def process_link(self, link, filename, time):
     headers = {'User-agent': 'subdown2 (https://github.com/legoktm/subdown2)'}
     req = urllib2.Request(link, headers=headers)
-    obj = urllib2.urlopen(req)
+    try:
+        obj = urllib2.urlopen(req)
+    except urllib2.HTTPError, e:
+        self.output('urllib2.HTTPError %s on %s' % (str(e), link), True)
+        return
     text = obj.read()
     obj.close()
     if md5.new(text).digest() == self.bad_imgur:
       self.output('%s has been removed from imgur.com' %(link), error=True)
+      return
     f = open(filename, 'w')
     f.write(text)
     f.close()
