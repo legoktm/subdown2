@@ -1,2 +1,3 @@
 simplejson
 python-twitter
+requests
