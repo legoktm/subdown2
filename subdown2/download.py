@@ -16,16 +16,14 @@ IMAGE_Q = Queue.Queue()
 
 def initialize_imgur_checking():
     if not os.path.isfile('.bad_imgur.jpg'):
-        obj = requests.get('http://i.imgur.com/sdlfkjdkfh.jpg')
-        text = obj.read()
-        obj.close()
-        f = open('.bad_imgur.jpg', 'w')
-        f.write(text)
-        f.close()
-    else:
-        f = open('.bad_imgur.jpg', 'r')
-        text = f.read()
-        f.close()
+        obj = requests.get('http://i.imgur.com/sdlfkjdkfh.jpg', stream=True)
+        with open('.bad_imgur.jpg', 'wb') as f:
+            for chunk in obj.iter_content(1024):
+                f.write(chunk)
+
+    f = open('.bad_imgur.jpg', 'r')
+    text = f.read()
+    f.close()
     digest = md5.new(text).digest()
     return digest
 
