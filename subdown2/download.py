@@ -10,6 +10,7 @@ import datetime
 import threading
 import Queue
 import log
+import urllib
 
 IMAGE_Q = Queue.Queue()
 
@@ -37,17 +38,19 @@ class Download_Thread(threading.Thread):
     def output(self, text,error=False):
         log.log(text, thread_name=self.getName(), error=error)
     def process_link(self, link, filename, time):
-        headers = {'User-agent': 'subdown2 (https://github.com/legoktm/subdown2)'}
-        req = requests.get(link, headers=headers)
-        if not req.ok:
-            return
-        text = req.text
-        if md5.new(text).digest() == self.bad_imgur:
-            self.output('%s has been removed from imgur.com' %link, error=True)
-            return
-        f = open(filename, 'w')
-        f.write(text)
-        f.close()
+        #headers = {'User-agent': 'subdown2 (https://github.com/legoktm/subdown2)'}
+        #req = requests.get(link, headers=headers)
+        #if not req.ok:
+        #    return
+        #text = req.text
+        #if md5.new(text).digest() == self.bad_imgur:
+        #    self.output('%s has been removed from imgur.com' %link, error=True)
+        #    return
+        #f = open(filename, 'w')
+        #f.write(text)
+        #f.close()
+        #ewwww
+        urllib.urlretrieve(link, filename)
         os.utime(filename, (time, time))
         self.output('Setting time to %s' %(time))
     
@@ -127,11 +130,11 @@ class Downloader:
     def Twitter(self, link):
         api = twitter.Api()
         try:
-            id = int(link.split('/status/')[-1])
+            twitter_id = int(link.split('/status/')[-1])
         except:
             self.output('Can\'t parse tweet: %s' %(link), True)
             return
-        stat = api.GetStatus(id)
+        stat = api.GetStatus(twitter_id)
         text = stat.text
         parsed = text[text.find("http://"):text.find("http://")+21]
         if len(parsed) == 1: #means it didnt find it
