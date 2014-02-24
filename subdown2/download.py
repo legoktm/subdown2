@@ -210,6 +210,6 @@ class Downloader:
             return r.headers
         else:
             if json:
-                return r.json
+                return r.json()
             return r.text
 

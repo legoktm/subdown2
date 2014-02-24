@@ -60,7 +60,7 @@ class Client:
         if page != 1:
             params['after'] = self.after
         r = requests.get(url, params=params, headers=self.headers)
-        data = r.json
+        data = r.json()
         try:
             self.after = data['data']['after']
             items = data['data']['children']
