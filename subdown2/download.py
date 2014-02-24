@@ -37,6 +37,7 @@ class Download_Thread(threading.Thread):
     
     def output(self, text,error=False):
         log.log(text, thread_name=self.getName(), error=error)
+
     def process_link(self, link, filename, time):
         #headers = {'User-agent': 'subdown2 (https://github.com/legoktm/subdown2)'}
         #req = requests.get(link, headers=headers)
@@ -52,9 +53,8 @@ class Download_Thread(threading.Thread):
         #ewwww
         urllib.urlretrieve(link, filename)
         os.utime(filename, (time, time))
-        self.output('Setting time to %s' %(time))
-    
-    
+        self.output('Setting time to %s' % time)
+
     def run(self):
         while True:
             link, filename, time = self.queue.get()
@@ -62,14 +62,11 @@ class Download_Thread(threading.Thread):
             self.queue.task_done()
     
 
-
-
 #spawn threads
 for i in range(10):
     t = Download_Thread(IMAGE_Q)
     t.setDaemon(True)
     t.start()
-
 
 
 class Downloader:
@@ -92,20 +89,21 @@ class Downloader:
         old_filename = link.split('/')[-1]
         extension = old_filename.split('.')[-1]
         link_hash = md5.new(link).hexdigest()
-        filename = self.title + '.' + link_hash + '.' + extension #the hash is used to prevent overwriting multiple submissions with the same filename
+        # the hash is used to prevent overwriting multiple submissions with the same filename
+        filename = self.title + '.' + link_hash + '.' + extension
         if filename == '':
             return
-        path = self.reddit+'/'+filename
+        path = self.reddit + '/' + filename
         if os.path.isfile(path) and (not self.force):
             os.utime(path, (self.time, self.time))
-            self.output('Skipping %s since it already exists' %(link))
+            self.output('Skipping %s since it already exists' % link)
             return
         #download the image, so add it to the queue
         self.output('Adding %s to queue.' % link)
         IMAGE_Q.put((link, path, self.time))
 
     def Imgur(self, link):
-        if '.' in link.split('/')[-1]: #raw link but no i. prefix
+        if '.' in link.split('/')[-1]:  # raw link but no i. prefix
             self.Raw(link)
             return
         #determine whether it is an album or just one image
@@ -113,37 +111,37 @@ class Downloader:
             #it's an album!
             self.output('Processing Imgur album: %s' %(link))
             link = link.split('#')[0]
-            id = link.split('/a/')[1]
-            api_link = 'http://api.imgur.com/2/album/%s.json' %(id)
+            i_id = link.split('/a/')[1]
+            api_link = 'http://api.imgur.com/2/album/%s.json' % i_id
             api = self.page_grab(api_link, json=True)
             for image in api['album']['images']:
                 self.Raw(image['links']['original'])
-            self.output('Finished Imgur album: %s' %(link))
+            self.output('Finished Imgur album: %s' % link)
         else:
             #it's a raw image
-            id = link.split('/')[-1]
-            api = self.page_grab('http://api.imgur.com/2/image/%s.json' %id, json=True)
+            i_id = link.split('/')[-1]
+            api = self.page_grab('http://api.imgur.com/2/image/%s.json' % i_id, json=True)
             self.Raw(api['image']['links']['original'])
         
     def Tumblr(self, link):
-        self.output(self.help %(link), True)
+        self.output(self.help % link, True)
     def Twitter(self, link):
         api = twitter.Api()
         try:
             twitter_id = int(link.split('/status/')[-1])
         except:
-            self.output('Can\'t parse tweet: %s' %(link), True)
+            self.output('Can\'t parse tweet: %s' % link, True)
             return
         stat = api.GetStatus(twitter_id)
         text = stat.text
         parsed = text[text.find("http://"):text.find("http://")+21]
-        if len(parsed) == 1: #means it didnt find it
+        if len(parsed) == 1:  # means it didnt find it
             parsed = text[text.find("https://"):text.find("https://")+22]
             did_it_work = len(parsed) != 1
             if not did_it_work:
                 raise
         #expand the url so we can send it through other sets of regular expressions
-        ret = self.page_grab('http://expandurl.appspot.com/expand', data={'url':parsed},json=True)
+        ret = self.page_grab('http://expandurl.appspot.com/expand', data={'url': parsed}, json=True)
         if ret['status'].lower() == 'ok':
             final_url = ret['end_url']
         else:
@@ -152,34 +150,39 @@ class Downloader:
         #    self.yfrog(final_url)
         #else:
         self.All(final_url)
+
     def yfrog(self, link):
         text = self.page_grab(link)
         image_url = text[text.find('<div class="label">Direct:&nbsp;&nbsp;<a href="')+47:text.find('" target="_blank"><img src="/images/external.png" alt="Direct"/>')]
         self.Raw(image_url)
+
     def Pagebin(self, link):
         html = self.page_grab(link)
-        x=re.findall('<img alt="(.*?)" src="(.*?)" style="width: (.*?)px; height: (.*?)px; " />', html)
+        x = re.findall('<img alt="(.*?)" src="(.*?)" style="width: (.*?)px; height: (.*?)px; " />', html)
         try:
             iimgur = x[0][1]
             self.Raw(iimgur)
         except KeyError:
             self.output("Can't parse pagebin.com HTML page :(", True)
             self.output("Report %s a bug please!" %(link), True)
+
     def bolt(self, link):
         html = self.page_grab(link)
         x = re.findall('<img src="(.*?)"', html)
         try:
             imglink = x[0]
         except IndexError:
-            self.output( link, True)
+            self.output(link, True)
             return
         self.Raw(imglink)
+
     def qkme(self, link):
-        self.output('Grabbing %s.' %(link))
+        self.output('Grabbing %s.' % link)
         try:
             memegrab.get_image_qm(memegrab.read_url(link), self.reddit+'/')
         except:
-            self.output('Error on %s' %(link), True)
+            self.output('Error on %s' % link, True)
+
     def All(self, link):
         #verify it is an html page, not a raw image.
         headers = self.page_grab(link, want_headers=True)
@@ -189,28 +192,30 @@ class Downloader:
                 #right header
                 is_image = 'image' in header
                 break
-        if is_image: #means it is most likely an image
+        if is_image:  # means it is most likely an image
             self.Raw(link)
             return
         self.output('Skipping %s since it is not an image.' %(link))
         return
+
     def setTime(self, time):
         self.time = time
+
     def setTitle(self, title):
         self.title = title.replace(' ', '_').replace('/', '_')
+
     def setThreadInfo(self, name):
         self.thread_name = name
+
     def output(self, text, error = False):
         log.log(text, thread_name = self.thread_name, error=error)
-    
 
     def page_grab(self, link, want_headers=False, data=None,json=False):
         headers = {'User-agent': 'subdown2 (https://github.com/legoktm/subdown2)'}
-        r = requests.get(link,headers=headers,params=data)
+        r = requests.get(link, headers=headers, params=data)
         if want_headers:
             return r.headers
         else:
             if json:
                 return r.json()
             return r.text
-
